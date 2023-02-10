@@ -5,14 +5,7 @@
 import numpy as np
 
 
-# 生成三角形网格点
-def grid_coordinate():
-    x_coor = np.arange([0, 5, 10])
-    y_coor_odd = np.arange([0, 5, 10])
-    y_coor_even = np.arange([0, 5, 9])
-
-
-# 三角形单元坐标（x，y）
+# 三角形单元节点坐标（x，y）
 x1 = 10
 y1 = 10
 x2 = 11
