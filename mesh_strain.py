@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
+from matplotlib.patches import Polygon
 
 def node_displacement(node_num):
     """
@@ -17,7 +18,7 @@ def node_displacement(node_num):
         node_disp[i][0] = x_coor[i]
         node_disp[i][1] = y_coor[i]
     
-    return node_disp
+    return np.sort(node_disp, axis=0)
 
 def creat_mesh(x, y, nx, ny, e_type):
     '''
@@ -69,6 +70,7 @@ def creat_mesh(x, y, nx, ny, e_type):
                 EI[(i - 1) * nx + j - 1, 1] = EI[(i - 1) * nx + j - 1, 0] + 1
                 EI[(i - 1) * nx + j - 1, 2] = EI[(i - 1) * nx + j - 1, 3] + 1
     # 至此完成了矩形单元的划分工作
+
     # 三角形单元需要将每一个矩形单元进行拆分，即一分二成两个三角形
     if e_type == 'TR':
         # 三角形的三个角
@@ -134,61 +136,77 @@ def strain_compute(node_coor, node_displace):
     # print(f"Ex = {strain_conp[0]}\nEy = {strain_conp[1]}\nRxy = {strain_conp[2]}")
     return strain_conp
 
-def draw_mesh():
-    plt.figure(1)
-    count = 1
-    # plot nodes num
-    for i in range(numN):
-        plt.annotate(count, xy=(NC[i, 0], NC[i, 1]))
-        count += 1
+def draw_mesh(flag, color_value_x=None):
+    if flag == "init_mesh":
+        plt.figure(1)
+        count = 1
+        # plot nodes num
+        for i in range(numN):
+            plt.annotate(count, xy=(NC[i, 0], NC[i, 1]))
+            count += 1
 
-    if element_type == 'SQ':
-        count2 = 1
+        if element_type == 'SQ':
+            count2 = 1
+            for i in range(numE):
+                # 计算中点位置
+                plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0]) / 2,
+                                        (NC[EI[i, 0] - 1, 1] + NC[EI[i, 3] - 1, 1]) / 2),
+                            c='blue')
+                count2 += 1
+                # plot lines
+                x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
+                x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
+                x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
+                x3, y3 = NC[EI[i, 3] - 1, 0], NC[EI[i, 3] - 1, 1]
+                plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
+                plt.plot([x0, x3], [y0, y3], c='red', linewidth=3)
+                plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
+                plt.plot([x2, x3], [y2, y3], c='red', linewidth=3)
+
+        if element_type == 'TR':
+            count2 = 1
+            for i in range(numE):
+                # 计算中点位置
+                plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0] + NC[EI[i, 2] - 1, 0]) / 3,
+                                        (NC[EI[i, 0] - 1, 1] + NC[EI[i, 1] - 1, 1] + NC[EI[i, 2] - 1, 1]) / 3),
+                            c='blue')
+                count2 += 1
+                x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
+                x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
+                x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
+                plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
+                plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
+                plt.plot([x0, x2], [y0, y2], c='red', linewidth=3)
+        # plt.xlim(0, x)
+        # plt.ylim(0, y)
+        plt.axis("equal")
+
+    elif flag == "strain_mesh":
+        fig = plt.figure(2)
+        sub = fig.add_subplot(111)
+        x = np.squeeze(NC[:, 0])
+        y = np.squeeze(NC[:, 1])
+        tri = EI - 1
+        triang = mtri.Triangulation(x, y, tri)
+
+        # 给每一个三角形添加颜色
+        triangles = tri
         for i in range(numE):
-            # 计算中点位置
-            plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0]) / 2,
-                                    (NC[EI[i, 0] - 1, 1] + NC[EI[i, 3] - 1, 1]) / 2),
-                        c='blue')
-            count2 += 1
-            # plot lines
-            x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
-            x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
-            x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-            x3, y3 = NC[EI[i, 3] - 1, 0], NC[EI[i, 3] - 1, 1]
-            plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
-            plt.plot([x0, x3], [y0, y3], c='red', linewidth=3)
-            plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
-            plt.plot([x2, x3], [y2, y3], c='red', linewidth=3)
+            vertices = np.zeros([3,2])
+            for j in range(3):
+                vertices[j,0] = x[triangles[i,j]]
+                vertices[j,1] = y[triangles[i,j]]
+            # x_center = (x[triangles[i,0]]+x[triangles[i,1]]+x[triangles[i,2]])/3
+            poly = Polygon(vertices, color=plt.cm.autumn(color_value_x[i]))
+            sub.add_patch(poly)
 
-    if element_type == 'TR':
-        count2 = 1
-        for i in range(numE):
-            # 计算中点位置
-            plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0] + NC[EI[i, 2] - 1, 0]) / 3,
-                                    (NC[EI[i, 0] - 1, 1] + NC[EI[i, 1] - 1, 1] + NC[EI[i, 2] - 1, 1]) / 3),
-                        c='blue')
-            count2 += 1
-            x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
-            x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
-            x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-            plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
-            plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
-            plt.plot([x0, x2], [y0, y2], c='red', linewidth=3)
-    # plt.xlim(0, x)
-    # plt.ylim(0, y)
-    plt.axis("equal")
 
-    plt.figure(2)
-    x = np.squeeze(NC[:, 0])
-    y = np.squeeze(NC[:, 1])
-    tri = EI - 1
-    triang = mtri.Triangulation(x, y, tri)
-    plt.tricontourf(triang, np.zeros_like(x))
-    plt.triplot(triang, 'go-')
+        # plt.tricontourf(triang, np.zeros_like(x))
+        plt.triplot(triang, 'go-')
 
     plt.show()
 
-
+'''
 def calculate_strain(displacements, coordinates, elements):
     """
     计算平面应变
@@ -219,6 +237,18 @@ def calculate_strain(displacements, coordinates, elements):
         strain = np.dot(B, np.array([u1, v1, u2, v2, u3, v3]))
         strains.append(strain)
     return strains
+'''
+
+def normalization(color_value):
+    '''
+    将应变值归一化，用于绘制热力图
+    '''
+    x_max = color_value.max()
+    x_min = color_value.min()
+    for i, value in enumerate(color_value):
+        color_value[i] = value / (x_max - x_min)
+
+    return color_value
 
 
 if __name__ == "__main__":
@@ -232,7 +262,7 @@ if __name__ == "__main__":
     numE = np.size(EI, 0)
 
     # 可视化网格
-    draw_mesh()
+    draw_mesh("init_mesh")
 
     node_disp_all = node_displacement(numN)
 
@@ -253,4 +283,20 @@ if __name__ == "__main__":
         
         strain_conp_all[e] = strain_compute(node_coor_tri, node_disp_tri)
     
+    # 可视化应变分量
+    color_value_x = strain_conp_all[:, 0, 0]
+    color_value_x = normalization(color_value_x)
+
+    color_value_y = strain_conp_all[:, 1, 0]
+    color_value_y = normalization(color_value_y)
+
+    color_value_xy = strain_conp_all[:, 2, 0]
+    color_value_xy = normalization(color_value_xy)
+
     print("单元应变：\n", strain_conp_all)
+
+    draw_mesh("strain_mesh", color_value_x)
+    draw_mesh("strain_mesh", color_value_y)
+    draw_mesh("strain_mesh", color_value_xy)
+
+    # plt.show()
