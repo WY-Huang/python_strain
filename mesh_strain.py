@@ -203,6 +203,7 @@ def draw_mesh(flag, color_value_x=None):
 
         # plt.tricontourf(triang, np.zeros_like(x))
         plt.triplot(triang, 'go-')
+        cbar = fig.colorbar(sub)
 
     plt.show()
 
@@ -283,6 +284,8 @@ if __name__ == "__main__":
         
         strain_conp_all[e] = strain_compute(node_coor_tri, node_disp_tri)
     
+    print("单元应变：\n", strain_conp_all)
+    
     # 可视化应变分量
     color_value_x = strain_conp_all[:, 0, 0]
     color_value_x = normalization(color_value_x)
@@ -292,8 +295,6 @@ if __name__ == "__main__":
 
     color_value_xy = strain_conp_all[:, 2, 0]
     color_value_xy = normalization(color_value_xy)
-
-    print("单元应变：\n", strain_conp_all)
 
     draw_mesh("strain_mesh", color_value_x)
     draw_mesh("strain_mesh", color_value_y)
