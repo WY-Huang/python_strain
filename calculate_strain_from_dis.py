@@ -3,13 +3,13 @@ import matplotlib.pyplot as plt
 from scipy.misc import derivative
 
 
-def read_data(sample_num=25, data_path=None, plate_length=96):
+def read_data(data_path=None, sample_num=25, plate_length=96):
     """
     读取位移数据,统一位移和x坐标的单位为mm
     """
     x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / sample_num)
 
-    dis_data = np.loadtxt('dis_data_25.txt')
+    dis_data = np.loadtxt(data_path)
     dis_data_mm = dis_data / 1000
 
     return x_coor, dis_data_mm
@@ -17,7 +17,7 @@ def read_data(sample_num=25, data_path=None, plate_length=96):
 
 def func_fit(x, dis, M=4):
     """
-    最小二乘法拟合位移数据
+    最小二乘法、多项式、拟合位移数据
     """
     X = x
     for i in range(2, M+1):
@@ -66,7 +66,7 @@ def strain_calc(x, func_dis):
 
 
 if __name__ == "__main__":
-    x_coor, dis_data_mm = read_data()
+    x_coor, dis_data_mm = read_data('dis_data_25.txt')
 
     # 绘制原始位移散点及拟合后的位移曲线
     plt.figure(1)
