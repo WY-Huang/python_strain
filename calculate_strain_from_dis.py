@@ -2,12 +2,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.misc import derivative
 
-def read_data(sample_num=None, data_path=None):
+def read_data(sample_num=25, data_path=None, plate_length=96):
     '''
-    读取位移数据
+    读取位移数据,统一位移和x坐标的单位为mm
     '''
-    SAMPLE_NUM = 25
-    x_coor = np.arange(0, SAMPLE_NUM).reshape(SAMPLE_NUM, 1) * (96 / 25)
+    x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / sample_num)
 
     dis_data = np.loadtxt('dis_data_25.txt')
     dis_data_mm = dis_data / 1000
@@ -16,7 +15,7 @@ def read_data(sample_num=None, data_path=None):
 
 def func_fit(x, dis, M=4):
     '''
-
+    最小二乘法拟合位移数据
     '''
     X = x
     for i in range(2, M+1):
@@ -30,22 +29,6 @@ def func_fit(x, dis, M=4):
 
     return co_w, y_estimate_lstsq
 
-def strain_calc(x):
-    '''
-    根据2阶导数计算应变
-    '''
-    second_deri = []
-    for _, x_value in enumerate(x):
-        
-        second_value = derivative(f_fit, x_value, dx=1e-6, n = 2)
-        # print(second_value)
-
-        second_deri.append(second_value)
-
-    strain = np.array(second_deri) * 0.25
-
-    return second_deri, strain
-
 def f_fit(x_coord):
     '''
     拟合函数
@@ -54,10 +37,26 @@ def f_fit(x_coord):
 
     return f
 
+def strain_calc(x):
+    '''
+    根据拟合后的位移方程的2阶导数计算应变
+    '''
+    second_deri = []
+    for _, x_value in enumerate(x):
+        
+        second_value = derivative(f_fit, x_value, dx=1e-6, n = 2)
+
+        second_deri.append(second_value)
+
+    strain = np.array(second_deri) * 0.25
+
+    return second_deri, strain
+
 
 if __name__ == "__main__":
     x_coor, dis_data_mm = read_data()
 
+    # 绘制原始位移散点及拟合后的位移曲线
     plt.figure(1)
     plt.plot(x_coor, dis_data_mm, 'bo', label="dis_noise")
 
@@ -67,6 +66,9 @@ if __name__ == "__main__":
 
     second_deri, strain = strain_calc(x_coor)
 
+    plt.legend()
+
+    # 绘制二阶导数曲线及应变曲线
     plt.figure(2)
     plt.plot(x_coor, second_deri, 'g', lw=2.0, label="second_deri")
     plt.plot(x_coor, strain, 'y', lw=2.0, label="strain")
