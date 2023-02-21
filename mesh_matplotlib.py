@@ -13,7 +13,7 @@ import matplotlib.tri as mtri
 def creat_mesh(x, y, nx, ny, e_type):
     '''
     x:x方向上的距离
-    x:y方向上的距离
+    y:y方向上的距离
     nx:x方向上的element的数量
     ny:y方向上的element的数量
     e_type:SQ表示是矩形单元,TR表示三角单元
@@ -83,63 +83,68 @@ def creat_mesh(x, y, nx, ny, e_type):
     return NC, EI
 
 
-x, y = 1, 1
-nx = 5
-ny = 4
-element_type = 'TR'
-NC, EI = creat_mesh(x, y, nx, ny, element_type)
-numN = np.size(NC, 0)
-numE = np.size(EI, 0)
-plt.figure(1)
-count = 1
-# plot nodes num
-for i in range(numN):
-    plt.annotate(count, xy=(NC[i, 0], NC[i, 1]))
-    count += 1
+if __name__ == "__main__":
+    x, y = 1, 1
+    nx = 5
+    ny = 4
+    element_type = 'TR'
+    NC, EI = creat_mesh(x, y, nx, ny, element_type)
 
-if element_type == 'SQ':
-    count2 = 1
-    for i in range(numE):
-        # 计算中点位置
-        plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0]) / 2,
-                                 (NC[EI[i, 0] - 1, 1] + NC[EI[i, 3] - 1, 1]) / 2),
-                     c='blue')
-        count2 += 1
-        # plot lines
-        x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
-        x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
-        x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-        x3, y3 = NC[EI[i, 3] - 1, 0], NC[EI[i, 3] - 1, 1]
-        plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
-        plt.plot([x0, x3], [y0, y3], c='red', linewidth=3)
-        plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
-        plt.plot([x2, x3], [y2, y3], c='red', linewidth=3)
+    print("节点坐标：", NC)
+    print("单元索引：", EI)
 
-if element_type == 'TR':
-    count2 = 1
-    for i in range(numE):
-        # 计算中点位置
-        plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0] + NC[EI[i, 2] - 1, 0]) / 3,
-                                 (NC[EI[i, 0] - 1, 1] + NC[EI[i, 1] - 1, 1] + NC[EI[i, 2] - 1, 1]) / 3),
-                     c='blue')
-        count2 += 1
-        x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
-        x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
-        x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-        plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
-        plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
-        plt.plot([x0, x2], [y0, y2], c='red', linewidth=3)
-# plt.xlim(0, x)
-# plt.ylim(0, y)
-plt.axis("equal")
-plt.show()
+    numN = np.size(NC, 0)
+    numE = np.size(EI, 0)
+    plt.figure(1)
+    count = 1
+    # plot nodes num
+    for i in range(numN):
+        plt.annotate(count, xy=(NC[i, 0], NC[i, 1]))
+        count += 1
 
-plt.figure(2)
-x = np.squeeze(NC[:, 0])
-y = np.squeeze(NC[:, 1])
-tri = EI - 1
-triang = mtri.Triangulation(x, y, tri)
-plt.tricontourf(triang, np.zeros_like(x))
-plt.triplot(triang, 'go-')
-plt.show()
+    if element_type == 'SQ':
+        count2 = 1
+        for i in range(numE):
+            # 计算中点位置
+            plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0]) / 2,
+                                    (NC[EI[i, 0] - 1, 1] + NC[EI[i, 3] - 1, 1]) / 2),
+                        c='blue')
+            count2 += 1
+            # plot lines
+            x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
+            x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
+            x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
+            x3, y3 = NC[EI[i, 3] - 1, 0], NC[EI[i, 3] - 1, 1]
+            plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
+            plt.plot([x0, x3], [y0, y3], c='red', linewidth=3)
+            plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
+            plt.plot([x2, x3], [y2, y3], c='red', linewidth=3)
+
+    if element_type == 'TR':
+        count2 = 1
+        for i in range(numE):
+            # 计算中点位置
+            plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0] + NC[EI[i, 2] - 1, 0]) / 3,
+                                    (NC[EI[i, 0] - 1, 1] + NC[EI[i, 1] - 1, 1] + NC[EI[i, 2] - 1, 1]) / 3),
+                        c='blue')
+            count2 += 1
+            x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
+            x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
+            x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
+            plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
+            plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
+            plt.plot([x0, x2], [y0, y2], c='red', linewidth=3)
+    # plt.xlim(0, x)
+    # plt.ylim(0, y)
+    plt.axis("equal")
+    # plt.show()
+
+    plt.figure(2)
+    x = np.squeeze(NC[:, 0])
+    y = np.squeeze(NC[:, 1])
+    tri = EI - 1
+    triang = mtri.Triangulation(x, y, tri)
+    plt.tricontourf(triang, np.zeros_like(x))
+    plt.triplot(triang, 'go-')
+    plt.show()
 

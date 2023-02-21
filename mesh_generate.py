@@ -1,10 +1,18 @@
 import vtk
 import pygmsh
 
-with pygmsh.occ.Geometry() as geom:
-    geom.characteristic_length_max = 0.1
-    ellipsoid = geom.add_rectangle(([0, 0], [0, 1], [1, 0], [1, 1]), 0.1)
+with pygmsh.geo.Geometry() as geom:
+    geom.add_polygon(
+        [
+            [0.0, 0.0],
+            [1.0, 0.0],
+            [1.0, 1.0],
+            [0.0, 1.0],
+        ],
+        mesh_size = 0.1,
+    )
     mesh = geom.generate_mesh()
+
     mesh.write("plate.vtk")
 
 # 加载VTK文件
