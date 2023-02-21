@@ -4,14 +4,14 @@ import matplotlib.pyplot as plt
 from scipy.signal import savgol_filter
 
 SAMPLE_NUM = 100  # 要生成的sample个数
-M = 7   # 多项式阶数
+M = 3   # 多项式阶数
 
 # 产生带有高斯噪声的信号
 mid, sigma = 0, 0.1 # 设置均值和方差
 noise = np.random.normal(mid, sigma, SAMPLE_NUM).reshape(SAMPLE_NUM, 1) # 生成SAMPLE_NUM个数据
 
-# 产生SAMPLE_NUM个序号(范围是0-4pi)
-x = np.arange(0, SAMPLE_NUM).reshape(SAMPLE_NUM, 1) / (SAMPLE_NUM-1)*(4*math.pi)
+# 产生SAMPLE_NUM个序号(范围是0-2pi)
+x = np.arange(0, SAMPLE_NUM).reshape(SAMPLE_NUM, 1) / (SAMPLE_NUM-1)*(2*math.pi)
 
 # generate y and y_noise, and both y's and y_noise's shape is (SAMPLE_NUM*1)
 y = np.sin(x)
@@ -40,14 +40,19 @@ y_estimate = X.dot(W)
 
 co_w, resl, _, _ = np.linalg.lstsq(X, y_noise, rcond=None)  # resl为残差的平方和
 print("co_w:", co_w, "\nresl", resl)
-y_estimate_lstsq = X.dot(W)
+y_estimate_lstsq = X.dot(co_w)
 
 yhat = savgol_filter(y_noise.T, 21, 3)    # window size 11, polynomial order 3
+
+co_w1, resl1, _, _ = np.linalg.lstsq(X, yhat.T, rcond=None)  # resl为残差的平方和
+print("co_w1:", co_w1, "\nresl1", resl1)
+y_hat_lstsq = X.dot(co_w1)
 
 #红色曲线显示x - y_estimate
 plt.plot(x, y_estimate, 'r', lw=2.0, label="np_inv")
 plt.plot(x, y_estimate_lstsq, 'y', lw=2.0, label="np_lstq")
 plt.plot(x, yhat.T, 'b', lw=2.0, label="scipy_sg")
+plt.plot(x, y_hat_lstsq, 'pink', lw=2.0, label="y_hat_lstsq")
 
 plt.legend()
-plt.show()  
+plt.show()
