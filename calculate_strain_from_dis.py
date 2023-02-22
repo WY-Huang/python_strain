@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.misc import derivative
+from scipy.signal import savgol_filter
 
 
 def read_data(data_path=None, sample_num=25, plate_length=96):
@@ -44,6 +45,17 @@ def f_fit(x_coord):
     return f
 
 
+def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0):
+    """
+    对位移数据进行滤波处理
+    """
+    yhat = savgol_filter(y_noise, win_size, poly_order)    # window size 11, polynomial order 3
+
+    yhat_2_deri = savgol_filter(y_noise, win_size, poly_order, deriv)   # 方法3
+
+    return yhat, yhat_2_deri
+
+
 def strain_calc(x, func_dis):
     """
     根据拟合后的位移方程的2阶导数计算应变
@@ -75,13 +87,19 @@ if __name__ == "__main__":
     co_w, func_fit, y_estimate_lstsq = func_fit(x_coor, dis_data_mm)
 
     plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="lstsq")
+
+    # 绘制sg滤波后的数据及2阶导数
+    dis_sg, sid_sg_deri = sg_filter(dis_data_mm, 5, 3, 2)
+    plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
+    plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
+
     plt.legend()
     plt.xlabel("x_coordinate [mm]")
     plt.ylabel("y_displacement [mm]")
 
     # 绘制一/二阶导数曲线及应变曲线
     first_deri, second_deri, strain = strain_calc(x_coor, func_fit)
-    print(strain * 1e6)
+    # print(strain * 1e6)
 
     plt.figure(2)
     plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
