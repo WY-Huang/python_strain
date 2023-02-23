@@ -29,7 +29,7 @@ def data_merge(data_num, save_flag=False):
     整合所有测点数据到单个txt文件
     """
     for i in range(1, data_num+1):
-        data_path = f"/home/wanyel/vs_code/python_strain/bending_strain/dis_data_20230222/新建试验#{i}.txt"
+        data_path = f"/home/wanyel/vs_code/python_strain/bending_strain/dis_data_20230223/新建试验#{i}.txt"
         dis_str = np.loadtxt(data_path, dtype=str)
         dis_float = np.delete(dis_str, 0, 0).astype(np.float64)
 
@@ -40,7 +40,7 @@ def data_merge(data_num, save_flag=False):
     
     # 第一列为序号，第二列为记录时间（ms），其它奇数列为速度（mm/s），偶数列为位移（um）
     if save_flag:
-        np.savetxt("bending_strain/dis_data_20230222/dis_data_all.txt", data_all)
+        np.savetxt("bending_strain/dis_data_20230223/dis_data_all.txt", data_all)
     print("数据大小为：", data_all.shape)
 
 
@@ -48,7 +48,7 @@ def time_dis(line_num=1000):
     """
     绘制所有测点在同一时刻下的位移曲线
     """
-    dis_all = np.loadtxt("bending_strain/dis_data_20230222/dis_data_all.txt")
+    dis_all = np.loadtxt("bending_strain/dis_data_20230223/dis_data_all.txt")
 
     plt.ion()
     plt.figure()
@@ -77,11 +77,11 @@ if __name__ == "__main__":
     # 单个测点数据的可视化
     if 0:
         for data_i in range(1, 56):
-            dis_data_visual(f"/home/wanyel/vs_code/python_strain/bending_strain/dis_data_20230222/新建试验#{data_i}.txt")
+            dis_data_visual(f"/home/wanyel/vs_code/python_strain/bending_strain/dis_data_20230223/新建试验#{data_i}.txt")
 
-        # plt.show()
+        plt.show()
 
-    # data_merge(55)
+    # data_merge(55, save_flag=True)
 
     # 同一时刻下，位移数据可视化
     time_dis()
