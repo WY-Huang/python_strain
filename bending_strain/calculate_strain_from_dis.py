@@ -64,7 +64,7 @@ def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0):
 
 def strain_calc(x, func_dis):
     """
-    根据拟合后的位移方程的2阶导数计算应变
+    根据整个数据最小二乘法拟合后的位移方程的2阶导数计算应变
     """
     func_1_deri = np.polyder(func_dis, 1)
     first_deri = []
@@ -83,7 +83,7 @@ def strain_calc(x, func_dis):
     return first_deri, second_deri, strain
 
 
-def dynamic_strain(x_point, strain_all, line_num=1000):
+def dynamic_visualization(x_point, data_all, ylabel="displacement [mm]", line_num=1000):
     """
     绘制所有测点在同一时刻下的应变曲线,动态显示
     """
@@ -92,15 +92,15 @@ def dynamic_strain(x_point, strain_all, line_num=1000):
     plt.figure()
 
     for row in range(line_num):
-        y_dis = strain_all[row, 3::2]
+        y_dis = data_all[row]
 
         # plt.clf()
         plt.cla()
-        plt.plot(x_point, y_dis/1000)
+        plt.plot(x_point, y_dis)
         plt.plot(x_point, np.zeros_like(x_point))
 
-        plt.xlabel("x_index")
-        plt.ylabel("displacement [mm]")
+        plt.xlabel("x_position")
+        plt.ylabel(ylabel)
         # plt.draw()
         if row != line_num-1:
             plt.pause(0.001)  #显示秒数
@@ -112,35 +112,47 @@ if __name__ == "__main__":
     # 读取数据
     x_coor, dis_data_mm = read_data('bending_strain/dis_data_20230223/dis_data_all.txt', 55, 110)
 
-    # 绘制原始位移散点及拟合后的位移曲线
-    plt.figure(1)
-    plt.plot(x_coor, dis_data_mm, 'bo', label="dis_noise")
+    
+    # 仅绘制一张图
+    only_one = 0
+    if only_one:
+        dis_data_one = dis_data_mm[1]
+        # 绘制原始位移散点及拟合后的位移曲线
+        plt.figure(1)
+        plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
 
-    co_w, func_fit, y_estimate_lstsq = func_fit(x_coor, dis_data_mm)
+        co_w, func, y_estimate_lstsq = func_fit(x_coor, dis_data_one)
 
-    plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="lstsq")
+        plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="lstsq")
 
-    # 绘制sg滤波后的数据及2阶导数
-    dis_sg, sid_sg_deri = sg_filter(dis_data_mm, 21, 3, 2)
-    plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
-    # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
+        # 绘制sg滤波后的数据及2阶导数
+        dis_sg, sid_sg_deri = sg_filter(dis_data_one, 21, 3, 2)
+        plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
+        # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
 
-    plt.legend()
-    plt.xlabel("x_coordinate [mm]")
-    plt.ylabel("y_displacement [mm]")
+        plt.legend()
+        plt.xlabel("x_coordinate [mm]")
+        plt.ylabel("y_displacement [mm]")
 
-    # 绘制一/二阶导数曲线及应变曲线
-    first_deri, second_deri, strain = strain_calc(x_coor, func_fit)
-    # print(strain * 1e6)
+        # 绘制一/二阶导数曲线及应变曲线
+        first_deri, second_deri, strain = strain_calc(x_coor, func)
+        # print(strain * 1e6)
 
-    plt.figure(2)
-    # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
-    plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
-    plt.plot(x_coor, strain * 1e6, 'y', lw=2.0, label="strain")
+        plt.figure(2)
+        # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
+        plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
+        plt.plot(x_coor, strain * 1e6, 'y', lw=2.0, label="strain")
 
-    plt.legend()
-    plt.xlabel("x_coordinate [mm]")
-    plt.ylabel("y_strain [uɛ]")
-    plt.show()
+        plt.legend()
+        plt.xlabel("x_coordinate [mm]")
+        plt.ylabel("y_strain [uɛ]")
+        plt.show()
+
+    # 动态显示数据
+    else:
+        # 按时间显示原始位移数据
+        dynamic_visualization(x_coor, dis_data_mm)
+
+        # 按时间显示应变数据
 
 
