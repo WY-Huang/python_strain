@@ -44,7 +44,7 @@ def data_merge(data_num, save_flag=False):
     for i in range(1, data_num+1):
         data_path = f"/home/wanyel/vs_code/python_strain/bending_strain/dis_data_20230223/新建试验#{i}.txt"
         dis_str = np.loadtxt(data_path, dtype=str)
-        dis_float = np.delete(dis_str, 0, 0).astype(np.float64)
+        dis_float = np.delete(dis_str, 0, 0).astype(np.float64)     # 删除第一行数据
 
         if i == 1:
             data_all = dis_float

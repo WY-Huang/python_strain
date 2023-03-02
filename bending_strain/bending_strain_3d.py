@@ -1,21 +1,15 @@
+"""
+平板三维数据处理
+"""
+
+
+import os
 from matplotlib import cm
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def read_data(data_path=None, sample_num=25, plate_length=96):
-    """
-    读取位移数据,统一位移和x坐标的单位为mm
-    """
-    x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / sample_num)
-
-    dis_data = np.loadtxt(data_path)
-    dis_data_mm = dis_data[10, 3::2] / 1000
-
-    return x_coor, dis_data_mm
-
-
-def dis_visualization_3d(flag=None, random_ge=True):
+def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True):
     """
     位移数据的三维可视化（是否就是时域ODS？）
     """
@@ -33,6 +27,10 @@ def dis_visualization_3d(flag=None, random_ge=True):
 
         X, Y = np.meshgrid(xs, ys)
         Z = np.linspace(0, num, num**2).reshape(num, num)
+
+    # Plot a trisurf
+    if flag == "trisurf":
+        ax.plot_trisurf(xs, ys, zs, cmap='viridis')
 
     # Plot a scatter
     if flag == "scatter":
@@ -58,12 +56,46 @@ def dis_visualization_3d(flag=None, random_ge=True):
     plt.show()
 
 
+def data_merge(path, save_flag=True):
+    """
+    将每个测点的位移数据整合到一个文件
+    """
+    # for file in os.listdir(path):
+    #     file_name_list = file.split("_")
+    #     if file_name_list[2] == "Vib.txt":
+    for index in range(1, 369):
+        dis = np.loadtxt(path + f"0_{index}_Vib.txt")
+
+        if index == 1:
+            data_all = dis
+        else:
+            data_all = np.column_stack((data_all, dis[:, 1]))
+
+    # 第一列为时间，后续每一列为一个测点随时间变化的位移数据
+    if save_flag:
+        np.savetxt("test_2022/dis_data_all.txt", data_all)
+    print("数据大小为：", data_all.shape)
+
+
 if __name__ == "__main__":
-    # 读取数据
-    # x_coor, dis_data_mm = read_data('bending_strain/dis_data_20230223/dis_data_all.txt', 55, 110)
+    # 整合数据并保存到test_2022/dis_data_all.txt
+    # data_merge("E:/舜宇2022/ldv/数据/位移/")
+
+    # 读取坐标点(x, y)数据
+    coor_data = np.loadtxt("test_2022/point.txt")
+    x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
+    plt.plot(x_coor, y_coor, marker='.', linestyle='')
+
+    # X, Y = np.meshgrid(x_coor, y_coor)
+    # plt.plot(X, Y, color='red', marker='.', linestyle='')  # 线型为空，即点与点之间不用线连接
+
+    plt.show()
+
+    # 读取所有坐标点的随时间变化的位移数据
+    dis_data = np.loadtxt("test_2022/dis_data_all.txt")
 
     # 绘制原始位移散点及拟合后的位移曲线
-    dis_visualization_3d("wireframe")
+    dis_visualization_3d(x_coor, y_coor, dis_data[1, 1:], "trisurf", False)
 
 
     # 绘制应变图
