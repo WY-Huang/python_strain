@@ -1,3 +1,9 @@
+"""
+平板一条直线上测点的弯曲应变计算，采用SG滤波算法
+
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 from scipy.misc import derivative
@@ -11,7 +17,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
     x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / sample_num)
 
     dis_data = np.loadtxt(data_path)
-    dis_data_mm = dis_data[10, 3::2] / 1000
+    dis_data_mm = dis_data[:, 3::2] / 1000
 
     return x_coor, dis_data_mm
 
@@ -77,7 +83,33 @@ def strain_calc(x, func_dis):
     return first_deri, second_deri, strain
 
 
+def dynamic_strain(x_point, strain_all, line_num=1000):
+    """
+    绘制所有测点在同一时刻下的应变曲线,动态显示
+    """
+
+    plt.ion()
+    plt.figure()
+
+    for row in range(line_num):
+        y_dis = strain_all[row, 3::2]
+
+        # plt.clf()
+        plt.cla()
+        plt.plot(x_point, y_dis/1000)
+        plt.plot(x_point, np.zeros_like(x_point))
+
+        plt.xlabel("x_index")
+        plt.ylabel("displacement [mm]")
+        # plt.draw()
+        if row != line_num-1:
+            plt.pause(0.001)  #显示秒数
+        else:
+            plt.pause(0)
+
+
 if __name__ == "__main__":
+    # 读取数据
     x_coor, dis_data_mm = read_data('bending_strain/dis_data_20230223/dis_data_all.txt', 55, 110)
 
     # 绘制原始位移散点及拟合后的位移曲线

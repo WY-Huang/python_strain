@@ -77,6 +77,20 @@ def wireframe():
     plt.show()
 
 
+def test_wireframe():
+    """
+    
+    """
+    x = np.arange(0, 5, 1)
+    y = np.arange(0, 5, 1)
+    X, Y = np.meshgrid(x, y)
+
+    Z = np.add(np.power(X, 1), np.power(X, 1))
+
+    print(X)
+    print(Y)
+    print(Z)
+
 def surface_plot():
     """
     3d surface plot
@@ -117,7 +131,8 @@ if __name__ == "__main__":
 
     # 3> 3d线框图绘制
     # wireframe()
+    test_wireframe()
 
     # 3> 3d曲面图绘制
-    surface_plot()
+    # surface_plot()
 
