@@ -11,7 +11,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
     x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / sample_num)
 
     dis_data = np.loadtxt(data_path)
-    dis_data_mm = dis_data / 1000
+    dis_data_mm = dis_data[10, 3::2] / 1000
 
     return x_coor, dis_data_mm
 
@@ -78,7 +78,7 @@ def strain_calc(x, func_dis):
 
 
 if __name__ == "__main__":
-    x_coor, dis_data_mm = read_data('dis_data_25.txt')
+    x_coor, dis_data_mm = read_data('bending_strain/dis_data_20230223/dis_data_all.txt', 55, 110)
 
     # 绘制原始位移散点及拟合后的位移曲线
     plt.figure(1)
@@ -89,9 +89,9 @@ if __name__ == "__main__":
     plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="lstsq")
 
     # 绘制sg滤波后的数据及2阶导数
-    dis_sg, sid_sg_deri = sg_filter(dis_data_mm, 5, 3, 2)
+    dis_sg, sid_sg_deri = sg_filter(dis_data_mm, 21, 3, 2)
     plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
-    plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
+    # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
 
     plt.legend()
     plt.xlabel("x_coordinate [mm]")
@@ -102,9 +102,9 @@ if __name__ == "__main__":
     # print(strain * 1e6)
 
     plt.figure(2)
-    plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
-    plt.plot(x_coor, second_deri, 'g', lw=2.0, label="second_deri")
-    plt.plot(x_coor, strain, 'y', lw=2.0, label="strain")
+    # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
+    plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
+    plt.plot(x_coor, strain * 1e6, 'y', lw=2.0, label="strain")
 
     plt.legend()
     plt.xlabel("x_coordinate [mm]")

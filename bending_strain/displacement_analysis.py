@@ -15,11 +15,19 @@ def dis_data_visual(data_path=None):
     y_displacement = dis_data[:, 3] / 1000  # unit to mm
 
     plt.figure()
-    # plt.plot(x_time, y_velocity, 'b', label='y_velocity')
-    plt.plot(x_time, y_displacement, 'r', label='y_displacement')
+    plt.plot(x_time, y_velocity, 'b', label='y_velocity [mm/s]')
+    plt.plot(x_time, y_displacement, 'r', label='y_displacement [mm]')
+
+    # 辅助分析线
+    plt.plot(x_time, np.zeros_like(x_time), 'y', label='y = 0 [mm]')  # 绘制y=0的直线
+    # y_list = [] # 绘制y=0时，垂直于x轴的辅助线
+    # for y_index, y_data in enumerate(y_displacement):
+    #     if y_data == 0:
+    #         y_list.append(y_index)
+    # plt.vlines(y_list, ymin=-1, ymax=1, color= 'pink', label="vline_y=0")
 
     plt.legend()
-    plt.xlabel("time [ms]")
+    plt.xlabel("time [s]")
     plt.ylabel("displacement [mm]")
     # plt.show()
 
@@ -75,8 +83,8 @@ def time_dis(line_num=1000):
 if __name__ == "__main__":
 
     # 单个测点数据的可视化
-    if 0:
-        for data_i in range(1, 56):
+    if 1:
+        for data_i in range(1, 10):
             dis_data_visual(f"/home/wanyel/vs_code/python_strain/bending_strain/dis_data_20230223/新建试验#{data_i}.txt")
 
         plt.show()
@@ -84,4 +92,4 @@ if __name__ == "__main__":
     # data_merge(55, save_flag=True)
 
     # 同一时刻下，位移数据可视化
-    time_dis()
+    # time_dis()
