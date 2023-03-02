@@ -83,13 +83,14 @@ def strain_calc(x, func_dis):
     return first_deri, second_deri, strain
 
 
-def dynamic_visualization(x_point, data_all, ylabel="displacement [mm]", line_num=1000):
+def dynamic_visualization(x_point, data_all, figure_num=1, ylabel="displacement [mm]", line_num=1000):
     """
-    绘制所有测点在同一时刻下的应变曲线,动态显示
+    绘制所有测点在同一时刻下的位移/应变曲线,动态显示
     """
-
+    data_all = np.array(data_all)
     plt.ion()
     plt.figure()
+    print("start plot：", ylabel)
 
     for row in range(line_num):
         y_dis = data_all[row]
@@ -103,20 +104,25 @@ def dynamic_visualization(x_point, data_all, ylabel="displacement [mm]", line_nu
         plt.ylabel(ylabel)
         # plt.draw()
         if row != line_num-1:
-            plt.pause(0.001)  #显示秒数
+            plt.pause(0.001)  # 显示秒数
         else:
             plt.pause(0)
+
+    plt.ioff()  # 关闭interactive mode
+    # plt.show()
+    plt.close("all")
 
 
 if __name__ == "__main__":
     # 读取数据
-    x_coor, dis_data_mm = read_data('bending_strain/dis_data_20230223/dis_data_all.txt', 55, 110)
+    x_coor, dis_data_mm = read_data('dis_data_20230223/dis_data_all.txt', 55, 110)
 
-    
     # 仅绘制一张图
     only_one = 0
     if only_one:
-        dis_data_one = dis_data_mm[1]
+        max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
+        print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
+        dis_data_one = dis_data_mm[max_dis_index[0]]
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
@@ -142,6 +148,7 @@ if __name__ == "__main__":
         # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
         plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
         plt.plot(x_coor, strain * 1e6, 'y', lw=2.0, label="strain")
+        plt.plot(x_coor, np.zeros_like(x_coor), 'r', label="y = 0")
 
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
@@ -154,5 +161,27 @@ if __name__ == "__main__":
         dynamic_visualization(x_coor, dis_data_mm)
 
         # 按时间显示应变数据
+        dis_row, dis_col = dis_data_mm.shape
+        dis_fit_lstsq = []
+        dis_fit_sg = []
+        second_deri_sg = []
+        strain_lstsq = []
+
+        for dis_i, dis_data in enumerate(dis_data_mm):
+            # fit method1
+            co_w, func, y_estimate_lstsq = func_fit(x_coor, dis_data)   # 最小二乘拟合一行数据（一条线上的所有测点）
+            dis_fit_lstsq.append(y_estimate_lstsq)
+            # fit method2
+            dis_sg, dis_sg_deri = sg_filter(dis_data, 21, 3, 2)
+            dis_fit_sg.append(dis_sg)
+            second_deri_sg.append(dis_sg_deri)
+            # strain calculate
+            first_deri, second_deri, strain = strain_calc(x_coor, func)
+            strain_lstsq.append(strain)
+
+        dynamic_visualization(x_coor, dis_fit_lstsq)  # 绘制lstsq拟合后的位移数据
+
+        dynamic_visualization(x_coor, strain_lstsq, ylabel="strain [uɛ]")  # 绘制lstsq拟合后的应变数据
+
 
 
