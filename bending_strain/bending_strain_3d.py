@@ -2,19 +2,19 @@
 平板三维数据处理
 """
 
-
 import os
 from matplotlib import cm
 import numpy as np
 import matplotlib.pyplot as plt
 
 
-def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True):
+def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, title=""):
     """
     位移数据的三维可视化（是否就是时域ODS？）
     """
-    fig = plt.figure()
-    ax = fig.add_subplot(projection='3d')
+    # fig = plt.figure()
+    # ax = fig.add_subplot(projection='3d')
+    ax.cla()
 
     # 随机生成数据
     if random_ge:
@@ -30,7 +30,7 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True):
 
     # Plot a trisurf
     if flag == "trisurf":
-        ax.plot_trisurf(xs, ys, zs, cmap='viridis')
+        ax.plot_trisurf(xs, ys, zs, cmap='hot_r')
 
     # Plot a scatter
     if flag == "scatter":
@@ -45,15 +45,18 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True):
 
     # Plot the surface.
     if flag == "surface":
-        ax.plot_surface(X, Y, Z, cmap=cm.coolwarm, linewidth=0, antialiased=False)
+        ax.plot_surface(X, Y, Z, cmap=cm.autumn, linewidth=0, antialiased=False)
 
 
     ax.set_xlabel('X Position [mm]')
     ax.set_ylabel('Y Position [mm]')
-    ax.set_zlabel('Z Position [mm]')
+    ax.set_zlabel('Z Position [um]')
     # ax.set_zlim(-1, 2)
 
-    plt.show()
+    ax.set_title(title)
+
+    # plt.show()
+    plt.pause(0.0001)
 
 
 def data_merge(path, save_flag=True):
@@ -82,20 +85,31 @@ if __name__ == "__main__":
     # data_merge("E:/舜宇2022/ldv/数据/位移/")
 
     # 读取坐标点(x, y)数据
-    coor_data = np.loadtxt("test_2022/point.txt")
+    coor_data = np.loadtxt("bending_strain/test_2022/point.txt")
     x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
-    plt.plot(x_coor, y_coor, marker='.', linestyle='')
 
-    # X, Y = np.meshgrid(x_coor, y_coor)
-    # plt.plot(X, Y, color='red', marker='.', linestyle='')  # 线型为空，即点与点之间不用线连接
+    show_xy_position = 0
+    if show_xy_position:
+        plt.plot(x_coor, y_coor, marker='.', linestyle='')
 
-    plt.show()
+        # X, Y = np.meshgrid(x_coor, y_coor)
+        # plt.plot(X, Y, color='red', marker='.', linestyle='')  # 线型为空，即点与点之间不用线连接
+
+        plt.show()
 
     # 读取所有坐标点的随时间变化的位移数据
-    dis_data = np.loadtxt("test_2022/dis_data_all.txt")
+    dis_data = np.loadtxt("bending_strain/test_2022/dis_data_all.txt")
+    data_shape = dis_data.shape
+    print("data size: ", data_shape)
 
     # 绘制原始位移散点及拟合后的位移曲线
-    dis_visualization_3d(x_coor, y_coor, dis_data[1, 1:], "trisurf", False)
+    fig = plt.figure()
+    ax = fig.add_subplot(projection='3d')
+
+    dis_time = dis_data[:, 0]
+    for index in range(data_shape[0]):
+        title_time = f"Num.{index} Time:[{dis_time[index]:f} s]"
+        dis_visualization_3d(x_coor, y_coor, dis_data[index, 1:], "scatter", False, title_time)
 
 
     # 绘制应变图
