@@ -246,6 +246,9 @@ if __name__ == "__main__":
         strain_lstsq_flat = np.hstack(strain_lstsq)
         strain_lstsq_all.append(strain_lstsq_flat)
 
+    # 保存拟合后的位移数据及应变数据
+    dis_fit_ndarray = 
+    
     # 绘制拟合位移散点
     show_dynamic_dis_fit = 1
     if show_dynamic_dis_fit:
