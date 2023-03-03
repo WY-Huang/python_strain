@@ -17,6 +17,7 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, t
     """
     # fig = plt.figure()
     # ax = fig.add_subplot(projection='3d')
+    # plt.ion()
     ax.cla()
 
     # 随机生成数据
@@ -33,7 +34,7 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, t
 
     # Plot a trisurf
     if flag == "trisurf":
-        ax.plot_trisurf(xs, ys, zs, cmap='hot_r')
+        ax.plot_trisurf(xs, ys, zs, cmap='gist_rainbow_r')
 
     # Plot a scatter
     if flag == "scatter":
@@ -50,7 +51,6 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, t
     if flag == "surface":
         ax.plot_surface(X, Y, Z, cmap=cm.autumn, linewidth=0, antialiased=False)
 
-
     ax.set_xlabel('X Position [mm]')
     ax.set_ylabel('Y Position [mm]')
     ax.set_zlabel(z_label)
@@ -59,7 +59,7 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, t
     ax.set_title(title)
 
     # plt.show()
-    plt.pause(0.0001)
+    plt.pause(0.01)
 
 
 def data_merge(path, save_flag=True):
@@ -268,6 +268,8 @@ if __name__ == "__main__":
         dis_time = dis_data[:, 0]
         for index in range(data_shape[0]):   # data_shape[0]
             title_time = f"Num.{index} Time:[{dis_time[index]:f} s]"
-            dis_visualization_3d(x_coor, y_coor, dis_fit_lstsq_all[index], "scatter", False, title_time)
+            # dis_visualization_3d(x_coor, y_coor, dis_fit_lstsq_all[index], "scatter", False, title_time)
+
+            dis_visualization_3d(x_coor, y_coor, strain_lstsq_all[index], "trisurf", False, title_time, z_label="Strain [uɛ]")
 
         plt.show()
