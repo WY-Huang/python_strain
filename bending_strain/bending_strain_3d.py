@@ -11,15 +11,10 @@ import matplotlib.pyplot as plt
 from calculate_strain_from_dis import func_fit, sg_filter, strain_calc
 
 
-def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, title='', z_label='Z Position [um]'):
+def demo_3d_visual(random_ge=True):
     """
-    位移数据的三维可视化（是否就是时域ODS？）
+    测试代码
     """
-    # fig = plt.figure()
-    # ax = fig.add_subplot(projection='3d')
-    # plt.ion()
-    ax.cla()
-
     # 随机生成数据
     if random_ge:
         np.random.seed(19960808)
@@ -30,36 +25,55 @@ def dis_visualization_3d(xs=None, ys=None, zs=None, flag=None, random_ge=True, t
         zs = np.random.rand(num)
 
         X, Y = np.meshgrid(xs, ys)
-        Z = np.linspace(0, num, num**2).reshape(num, num)
+        Z = np.linspace(0, num, num ** 2).reshape(num, num)
 
-    # Plot a trisurf
-    if flag == "trisurf":
-        ax.plot_trisurf(xs, ys, zs, cmap='gist_rainbow_r')
 
-    # Plot a scatter
-    if flag == "scatter":
-        ax.scatter(xs, ys, zs, marker="o")
+def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='Z Position [um]'):
+    """
+    位移数据的三维可视化（是否就是时域ODS？）
+    """
+    fig_3d = plt.figure()
+    ax_3d = fig_3d.add_subplot(projection='3d')
+    # plt.ion()
 
-    # Plot a basic wireframe.
-    if flag == "wireframe":
-        # Z = zs.reshape(num, num)
-        # Z = np.sin(np.sqrt(X ** 2 + Y ** 2))
+    xs, ys = xc, yc
+    for idx in range(len(times)):
+        title = f"Num.{idx} Time:[{times[idx]:f} s]"
+        zs = zc[idx]
 
-        ax.plot_wireframe(X, Y, Z, rstride=10, cstride=10)
+        ax_3d.cla()
+        # Plot a trisurf
+        if flag == "trisurf":
+            ax_3d.plot_trisurf(xs, ys, zs, cmap='gist_rainbow_r')
 
-    # Plot the surface.
-    if flag == "surface":
-        ax.plot_surface(X, Y, Z, cmap=cm.autumn, linewidth=0, antialiased=False)
+        # Plot a scatter
+        elif flag == "scatter":
+            ax_3d.scatter(xs, ys, zs, marker="o")
 
-    ax.set_xlabel('X Position [mm]')
-    ax.set_ylabel('Y Position [mm]')
-    ax.set_zlabel(z_label)
-    # ax.set_zlim(-1, 2)
+        # Plot a basic wireframe.
+        elif flag == "wireframe":
+            # Z = zs.reshape(num, num)
+            # Z = np.sin(np.sqrt(X ** 2 + Y ** 2))
+            X, Y = np.meshgrid(xs, ys)
+            Z = zc
 
-    ax.set_title(title)
+            ax_3d.plot_wireframe(X, Y, Z, rstride=10, cstride=10)
 
-    # plt.show()
-    plt.pause(0.01)
+        # Plot the surface.
+        elif flag == "surface":
+            X, Y = np.meshgrid(xs, ys)
+            Z = zc
+            ax_3d.plot_surface(X, Y, Z, cmap=cm.autumn, linewidth=0, antialiased=False)
+
+        ax_3d.set_title(title)
+
+        ax_3d.set_xlabel('X Position [mm]')
+        ax_3d.set_ylabel('Y Position [mm]')
+        ax_3d.set_zlabel(z_label)
+        # ax.set_zlim(-1, 2)
+
+        # plt.show()
+        plt.pause(0.001)
 
 
 def data_merge(path, save_flag=True):
@@ -83,21 +97,39 @@ def data_merge(path, save_flag=True):
     print("数据大小为：", data_all.shape)
 
 
-def get_x_z_data(x_coor_all, dis_z):
+def get_x_y_z_data(x_coor_all, y_coor_all, dis_z):
     """
     获取每行x和z的坐标
     """
+    assert len(x_coor_all) == len(dis_z) == len(y_coor_all)
+
     x_max = x_coor_all.max()
+    x_min = x_coor_all.min()
     coor_list_x = []
+    coor_list_y = []
     coor_list_z = []
 
-    x_max_index = np.where(x_coor_all==x_max)
-    # print("x_max_index: ", x_max_index)
-    x_max_i_start = 0
-    for x_max_i in np.nditer(x_max_index):
-        coor_list_x.append(x_coor_all[x_max_i_start:(x_max_i+1)])
-        coor_list_z.append(dis_z[x_max_i_start:(x_max_i+1)])
-        x_max_i_start = x_max_i + 1
+    x_max_index = np.where(x_coor_all == x_max)
+    x_min_index = np.where(x_coor_all == x_min)
+    assert len(x_max_index) == len(x_min_index)
+    # print("x_max_index: ", x_max_index, "\n", "x_min_index: ", x_min_index)
+
+    delete_outlier = 1
+    if delete_outlier:
+        for row in range(len(x_max_index[0])):
+            start_i = x_min_index[0][row]
+            end_i = x_max_index[0][row] + 1
+            coor_list_x.append(x_coor_all[start_i:end_i])
+            coor_list_z.append(dis_z[start_i:end_i])
+            coor_list_y.append(y_coor_all[start_i:end_i])
+
+    else:
+        x_max_i_start = 0
+        for x_max_i in np.nditer(x_max_index):
+            coor_list_x.append(x_coor_all[x_max_i_start:(x_max_i+1)])
+            coor_list_z.append(dis_z[x_max_i_start:(x_max_i+1)])
+            coor_list_y.append(y_coor_all[x_max_i_start:(x_max_i + 1)])
+            x_max_i_start = x_max_i + 1
 
     print_flag = 0
     if print_flag:
@@ -111,7 +143,7 @@ def get_x_z_data(x_coor_all, dis_z):
             list_len_z.append(len(z)) 
         print("list_len_z:", list_len_z)
 
-    return coor_list_x, coor_list_z
+    return coor_list_x, coor_list_y, coor_list_z
 
 
 def dynamic_visualization(x_point_all, data_all, figure_num=1, ylabel="displacement [mm]", line_num=1000,
@@ -151,18 +183,19 @@ if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
     # data_merge("E:/舜宇2022/ldv/数据/位移/")
 
-    # 读取坐标点(x, y)数据
+    # 读取原始坐标点(x, y)数据
     coor_data = np.loadtxt("test_2022/point.txt")   # bending_strain/
     x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
 
-    # 读取所有坐标点的随时间变化的位移数据
+    # 读取所有原始坐标点的随时间变化的位移数据
     dis_data = np.loadtxt("test_2022/dis_data_all.txt")
     data_shape = dis_data.shape
-    print("dis data size: ", data_shape)
+    print("Out of plate displacement data size: ", data_shape)
 
-    # 绘制xy坐标位置图
+    # 绘制原始xy坐标位置图
     show_xy_position = 0
     if show_xy_position:
+        plt.figure("x_y_coordinate")
         plt.plot(x_coor, y_coor, marker='.', linestyle='')
 
         # X, Y = np.meshgrid(x_coor, y_coor)
@@ -171,105 +204,94 @@ if __name__ == "__main__":
         # plt.show()
         plt.pause(0.1)
 
+        # 查看坐标点绘制顺序
         for coor_index, coor_xy in enumerate(coor_data):
-            plt.plot(coor_xy[1], coor_xy[2], marker='^', linestyle='')
+            plt.plot(coor_xy[1], coor_xy[2], marker='o', linestyle='')
             plt.pause(0.01)
         
-        plt.pause(0)
+        plt.show()
 
     # 绘制原始位移散点
-    show_dynamic_dis = 0
+    show_dynamic_dis = 1
     if show_dynamic_dis:
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-
         dis_time = dis_data[:, 0]
-        for index in range(data_shape[0]):
-            title_time = f"Num.{index} Time:[{dis_time[index]:f} s]"
-            dis_visualization_3d(x_coor, y_coor, dis_data[index, 1:], "scatter", False, title_time)
+        visualization_3d(x_coor, y_coor, dis_data[:, 1:], "scatter", dis_time)
+        plt.show()
 
     # 所有时刻位移数据拟合及应变计算
     local_load = 1
     if local_load:
-        dis_fit_lstsq_all = np.loadtxt("test_2022/dis_fit.txt")
-        strain_lstsq_all = np.loadtxt("test_2022/strain.txt")
+        xy_coor_deleted = np.loadtxt("test_2022/xy_coor_deleted.txt")
+        x_coor_d, y_coor_d = xy_coor_deleted[:, 0], xy_coor_deleted[:, 1]
+
+        dis_fit_lstsq_all = np.loadtxt("test_2022/dis_fit_lstsq.txt")
+        dis_fit_sg_all = np.loadtxt("test_2022/dis_fit_sg.txt")
+        strain_lstsq_all = np.loadtxt("test_2022/second_deri_sg.txt")
+        second_deri_sg_all = np.loadtxt("test_2022/strain_lstsq.txt")
     else:
-        dis_fit_lstsq_all = []
-        strain_lstsq_all = []
+        data_dict_all = {"dis_fit_lstsq": [], "dis_fit_sg": [],
+                         "second_deri_sg": [], "strain_lstsq": []}
+        xy_save = True
         for dis_point in tqdm(dis_data[:, 1:]):
 
             # 解析某一时刻的位移数据z及坐标xy
-            x_list, z_list = get_x_z_data(x_coor, dis_point)
+            x_list, y_list, z_list = get_x_y_z_data(x_coor, y_coor, dis_point)
+            if xy_save:
+                x_coor_deleted = np.hstack(x_list).reshape((-1, 1))
+                y_coor_deleted = np.hstack(y_list).reshape((-1, 1))
+                xy_coor_deleted = np.hstack((x_coor_deleted, y_coor_deleted))
+                np.savetxt("test_2022/xy_coor_deleted.txt", xy_coor_deleted)
+                print("xy_coor_deleted shape: ", xy_coor_deleted.shape)
+                xy_save = False
 
             # 位移数据拟合
-            dis_fit_lstsq = []
-            dis_fit_sg = []
-            second_deri_sg = []
-            strain_lstsq = []
+            data_dict = {"dis_fit_lstsq": [], "dis_fit_sg": [],
+                         "second_deri_sg": [], "strain_lstsq": []}
 
             for dis_i, dis_data_i in enumerate(z_list):
                 # fit method1
                 co_w, func, y_estimate_lstsq = func_fit(x_list[dis_i], dis_data_i)   # 最小二乘拟合一行数据（一条线上的所有测点）
-                dis_fit_lstsq.append(y_estimate_lstsq)
+                data_dict["dis_fit_lstsq"].append(y_estimate_lstsq)
                 # fit method2
                 dis_sg, dis_sg_deri = sg_filter(dis_data_i, 5, 3, 2)
-                dis_fit_sg.append(dis_sg)
-                second_deri_sg.append(dis_sg_deri)
+                data_dict["dis_fit_sg"].append(dis_sg)
+                data_dict["second_deri_sg"].append(dis_sg_deri)
                 # strain calculate
                 first_deri, second_deri, strain = strain_calc(x_list[dis_i], func)
-                strain_lstsq.append(strain)
+                data_dict["strain_lstsq"].append(strain)
 
             dynamic_show = 0
             if dynamic_show:
                 dynamic_visualization(x_list, z_list)   # 按时间显示原始位移数据
 
-                dynamic_visualization(x_list, dis_fit_lstsq, linestyle='solid')  # 绘制lstsq拟合后的位移数据
+                dynamic_visualization(x_list, data_dict["dis_fit_lstsq"], linestyle='solid')  # 绘制lstsq拟合后的位移数据
 
-                dynamic_visualization(x_list, strain_lstsq, ylabel="strain [uɛ]", linestyle='solid')  # 绘制lstsq拟合后的应变数据
+                dynamic_visualization(x_list, data_dict["strain_lstsq"],
+                                      ylabel="strain [uɛ]", linestyle='solid')  # 绘制lstsq拟合后的应变数据
 
                 # 绘制应变图
                 plt.show()
 
-            show_dynamic_strain = 0
-            if show_dynamic_strain:
-                # 绘制应变散点
-                # strain_one = sum(strain_lstsq, [])    # 列表展开，如果strain_lstsq为列表
-                strain_one = np.hstack(strain_lstsq)
-
-                fig = plt.figure()
-                ax = fig.add_subplot(projection='3d')
-
-                dis_visualization_3d(x_coor, y_coor, strain_one, "trisurf", False, z_label="Strain [uɛ]")
-                plt.show()
-
-            dis_fit_lstsq_flat = np.hstack(dis_fit_lstsq)
-            dis_fit_lstsq_all.append(dis_fit_lstsq_flat)
-
-            strain_lstsq_flat = np.hstack(strain_lstsq)
-            strain_lstsq_all.append(strain_lstsq_flat)
+            for key, value in data_dict.items():
+                data_dict_all[key].append(np.hstack(value))     # 将value转为一行，并添加到字典中
 
         # 保存拟合后的位移数据及应变数据
-        dis_fit_ndarray = np.array(dis_fit_lstsq_all)
-        strain_fit_ndarray = np.array(strain_lstsq_all)
-
-        save_flag = 0
+        save_flag = 1
         if save_flag:
-            np.savetxt("test_2022/dis_fit.txt", dis_fit_ndarray)
-            np.savetxt("test_2022/strain.txt", strain_fit_ndarray)
-        print("dis_fit数据大小为：", dis_fit_ndarray.shape)
-        print("strain数据大小为：", strain_fit_ndarray.shape)
+            for keys, values in data_dict_all.items():
+                np_values = np.array(values)
+                np.savetxt(f"test_2022/{keys}.txt", np_values)
+
+                print(f"{keys} 数据大小为：", np_values.shape)
     
-    # 绘制拟合位移的散点图
+    # 绘制拟合位移的散点图、应变图
     show_dynamic_dis_fit = 1
     if show_dynamic_dis_fit:
-        fig = plt.figure()
-        ax = fig.add_subplot(projection='3d')
-
         dis_time = dis_data[:, 0]
-        for index in range(data_shape[0]):   # data_shape[0]
-            title_time = f"Num.{index} Time:[{dis_time[index]:f} s]"
-            # dis_visualization_3d(x_coor, y_coor, dis_fit_lstsq_all[index], "scatter", False, title_time)
-
-            dis_visualization_3d(x_coor, y_coor, strain_lstsq_all[index], "trisurf", False, title_time, z_label="Strain [uɛ]")
+        # visualization_3d(x_coor_d, y_coor_d, dis_fit_lstsq_all, "scatter", dis_time)
+        # visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, "trisurf", dis_time, z_label="Strain [uɛ]")
+        #
+        # visualization_3d(x_coor_d, y_coor_d, dis_fit_sg_all, "scatter", dis_time)
+        visualization_3d(x_coor_d, y_coor_d, second_deri_sg_all, "trisurf", dis_time, z_label="Strain [uɛ]")
 
         plt.show()
