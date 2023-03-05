@@ -126,8 +126,8 @@ def get_x_y_z_data(x_coor_all, y_coor_all, dis_z):
     else:
         x_max_i_start = 0
         for x_max_i in np.nditer(x_max_index):
-            coor_list_x.append(x_coor_all[x_max_i_start:(x_max_i+1)])
-            coor_list_z.append(dis_z[x_max_i_start:(x_max_i+1)])
+            coor_list_x.append(x_coor_all[x_max_i_start:(x_max_i + 1)])
+            coor_list_z.append(dis_z[x_max_i_start:(x_max_i + 1)])
             coor_list_y.append(y_coor_all[x_max_i_start:(x_max_i + 1)])
             x_max_i_start = x_max_i + 1
 
@@ -135,12 +135,12 @@ def get_x_y_z_data(x_coor_all, y_coor_all, dis_z):
     if print_flag:
         list_len_x = []
         for x in iter(coor_list_x):
-            list_len_x.append(len(x)) 
+            list_len_x.append(len(x))
         print("list_len_x:", list_len_x)
 
         list_len_z = []
         for z in iter(coor_list_z):
-            list_len_z.append(len(z)) 
+            list_len_z.append(len(z))
         print("list_len_z:", list_len_z)
 
     return coor_list_x, coor_list_y, coor_list_z
@@ -169,7 +169,7 @@ def dynamic_visualization(x_point_all, data_all, figure_num=1, ylabel="displacem
         plt.xlabel("x_position")
         plt.ylabel(ylabel)
         # plt.draw()
-        if row != line_num-1:
+        if row != line_num - 1:
             plt.pause(0.1)  # 显示秒数
         else:
             plt.show()
@@ -183,8 +183,12 @@ if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
     # data_merge("E:/舜宇2022/ldv/数据/位移/")
 
+    # ================================================================================
+    # （1）原始位移及坐标数据读取显示
+    # ================================================================================
+
     # 读取原始坐标点(x, y)数据
-    coor_data = np.loadtxt("test_2022/point.txt")   # bending_strain/
+    coor_data = np.loadtxt("test_2022/point.txt")  # bending_strain/
     x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
 
     # 读取所有原始坐标点的随时间变化的位移数据
@@ -208,17 +212,20 @@ if __name__ == "__main__":
         for coor_index, coor_xy in enumerate(coor_data):
             plt.plot(coor_xy[1], coor_xy[2], marker='o', linestyle='')
             plt.pause(0.01)
-        
+
         plt.show()
 
-    # 绘制原始位移散点
-    show_dynamic_dis = 1
+    # 绘制原始位移散点图
+    show_dynamic_dis = 0
     if show_dynamic_dis:
         dis_time = dis_data[:, 0]
         visualization_3d(x_coor, y_coor, dis_data[:, 1:], "scatter", dis_time)
         plt.show()
 
-    # 所有时刻位移数据拟合及应变计算
+    # ================================================================================
+    # （2）所有时刻位移数据拟合及应变计算（逐行拟合位移数据、并求二阶导数计算应变）
+    # ================================================================================
+
     local_load = 1
     if local_load:
         xy_coor_deleted = np.loadtxt("test_2022/xy_coor_deleted.txt")
@@ -250,7 +257,7 @@ if __name__ == "__main__":
 
             for dis_i, dis_data_i in enumerate(z_list):
                 # fit method1
-                co_w, func, y_estimate_lstsq = func_fit(x_list[dis_i], dis_data_i)   # 最小二乘拟合一行数据（一条线上的所有测点）
+                co_w, func, y_estimate_lstsq = func_fit(x_list[dis_i], dis_data_i)  # 最小二乘拟合一行数据（一条线上的所有测点）
                 data_dict["dis_fit_lstsq"].append(y_estimate_lstsq)
                 # fit method2
                 dis_sg, dis_sg_deri = sg_filter(dis_data_i, 5, 3, 2)
@@ -262,7 +269,7 @@ if __name__ == "__main__":
 
             dynamic_show = 0
             if dynamic_show:
-                dynamic_visualization(x_list, z_list)   # 按时间显示原始位移数据
+                dynamic_visualization(x_list, z_list)  # 按时间显示原始位移数据
 
                 dynamic_visualization(x_list, data_dict["dis_fit_lstsq"], linestyle='solid')  # 绘制lstsq拟合后的位移数据
 
@@ -273,7 +280,7 @@ if __name__ == "__main__":
                 plt.show()
 
             for key, value in data_dict.items():
-                data_dict_all[key].append(np.hstack(value))     # 将value转为一行，并添加到字典中
+                data_dict_all[key].append(np.hstack(value))  # 将value转为一行，并添加到字典中
 
         # 保存拟合后的位移数据及应变数据
         save_flag = 1
@@ -283,8 +290,23 @@ if __name__ == "__main__":
                 np.savetxt(f"test_2022/{keys}.txt", np_values)
 
                 print(f"{keys} 数据大小为：", np_values.shape)
-    
-    # 绘制拟合位移的散点图、应变图
+
+    # 绘制新的xy坐标位置图
+    show_xy_position = 1
+    if show_xy_position:
+        plt.figure("x_y_coordinate")
+        plt.plot(x_coor_d, y_coor_d, marker='.', linestyle='')
+
+        plt.pause(0.1)
+
+        # 查看坐标点绘制顺序
+        for coor_index, coor_xy in enumerate(xy_coor_deleted):
+            plt.plot(coor_xy[0], coor_xy[1], marker='o', linestyle='')
+            plt.pause(0.01)
+
+        plt.show()
+
+    # 绘制拟合后的位移的散点图、应变图
     show_dynamic_dis_fit = 1
     if show_dynamic_dis_fit:
         dis_time = dis_data[:, 0]
