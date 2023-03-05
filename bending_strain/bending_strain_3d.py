@@ -76,7 +76,7 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
         plt.pause(0.001)
 
 
-def data_merge(path, save_flag=True):
+def data_merge(path, save_flg=True):
     """
     将每个测点的位移数据整合到一个文件
     """
@@ -92,7 +92,7 @@ def data_merge(path, save_flag=True):
             data_all = np.column_stack((data_all, dis[:, 1]))
 
     # 第一列为时间，后续每一列为一个测点随时间变化的位移数据
-    if save_flag:
+    if save_flg:
         np.savetxt("test_2022/dis_data_all.txt", data_all)
     print("数据大小为：", data_all.shape)
 
