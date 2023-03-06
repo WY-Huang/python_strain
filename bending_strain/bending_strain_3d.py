@@ -224,7 +224,7 @@ def strain_hotmap(x, y, strain, times):
         cbar_ax.cla()
         sns.heatmap(ax = ax, data = strain_data, xticklabels=x, yticklabels=y, cmap = "gist_rainbow_r", cbar_ax = cbar_ax)
 
-        plt.pause(0.01)
+        plt.pause(0.001)
 
     plt.show()
 
@@ -385,4 +385,4 @@ if __name__ == "__main__":
             x_c = np.arange(1,32)
             y_c = np.arange(1,12)
         
-        strain_hotmap(x_c, y_c, second_deri_sg_all, dis_time)
+        strain_hotmap(x_c, y_c, dis_fit_sg_all, dis_time)
