@@ -1,5 +1,5 @@
 """
-平板三维数据处理
+带孔平板位移数据处理及三维可视化分析
 """
 
 import os
@@ -7,6 +7,7 @@ from tqdm import tqdm
 from matplotlib import cm
 import numpy as np
 import matplotlib.pyplot as plt
+import seaborn as sns
 
 from calculate_strain_from_dis import func_fit, sg_filter, strain_calc
 
@@ -34,6 +35,8 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
     """
     fig_3d = plt.figure()
     ax_3d = fig_3d.add_subplot(projection='3d')
+
+    cax = ax_3d.inset_axes([1.03, 0, 0.1, 1], transform=ax_3d.transAxes) # Colorbar is held by `cax`.
     # plt.ion()
 
     xs, ys = xc, yc
@@ -44,7 +47,7 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
         ax_3d.cla()
         # Plot a trisurf
         if flag == "trisurf":
-            ax_3d.plot_trisurf(xs, ys, zs, cmap='gist_rainbow_r')
+            fig_tri = ax_3d.plot_trisurf(xs, ys, zs, cmap='gist_rainbow_r')
 
         # Plot a scatter
         elif flag == "scatter":
@@ -71,9 +74,12 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
         ax_3d.set_ylabel('Y Position [mm]')
         ax_3d.set_zlabel(z_label)
         # ax.set_zlim(-1, 2)
+        # plt.colorbar(fig_tri)
+        # cax.clear()
+        # plt.colorbar(fig_tri, cax=cax)
 
         # plt.show()
-        plt.pause(0.001)
+        plt.pause(0.0001)
 
 
 def data_merge(path, save_flg=True):
@@ -122,6 +128,31 @@ def get_x_y_z_data(x_coor_all, y_coor_all, dis_z):
             coor_list_x.append(x_coor_all[start_i:end_i])
             coor_list_z.append(dis_z[start_i:end_i])
             coor_list_y.append(y_coor_all[start_i:end_i])
+        
+        # 删除不规则点，空白区域填0(测试后发现不合适)， 填邻近值
+        for r in range(2, 6):
+            if r == 2:
+                coor_list_x[r] = np.delete(coor_list_x[r], 13)
+                coor_list_y[r] = np.delete(coor_list_y[r], 13)
+                coor_list_z[r] = np.delete(coor_list_z[r], 13)
+
+                coor_list_x[r] = np.insert(coor_list_x[r], 13, coor_list_x[0][13:15])
+                coor_list_y[r] = np.insert(coor_list_y[r], 13, coor_list_y[r][:2])
+                coor_list_z[r] = np.insert(coor_list_z[r], 13, coor_list_z[r][12:14])
+
+            elif r == 3 or r == 4:
+                coor_list_x[r] = np.insert(coor_list_x[r], 12, coor_list_x[0][12:16])
+                coor_list_y[r] = np.insert(coor_list_y[r], 12, coor_list_y[r][:4])
+                coor_list_z[r] = np.insert(coor_list_z[r], 12, coor_list_z[r][11:15])
+
+            if r == 5:
+                coor_list_x[r] = np.delete(coor_list_x[r], 12)
+                coor_list_y[r] = np.delete(coor_list_y[r], 12)
+                coor_list_z[r] = np.delete(coor_list_z[r], 12)
+
+                coor_list_x[r] = np.insert(coor_list_x[r], 12, coor_list_x[0][12:15])
+                coor_list_y[r] = np.insert(coor_list_y[r], 12, coor_list_y[r][:3])
+                coor_list_z[r] = np.insert(coor_list_z[r], 12, coor_list_z[r][11:14])
 
     else:
         x_max_i_start = 0
@@ -179,6 +210,25 @@ def dynamic_visualization(x_point_all, data_all, figure_num=1, ylabel="displacem
     # plt.close("all")
 
 
+def strain_hotmap(x, y, strain, times):
+    """
+    绘制应变随时间变化的热力图
+    """
+    grid_kws = {'width_ratios': (0.9, 0.05), 'wspace': 0.2}
+    fig, (ax, cbar_ax) = plt.subplots(1, 2, gridspec_kw = grid_kws, figsize = (12, 4))
+
+    for idx in range(len(times)):
+        title = f"Num.{idx} Time:[{times[idx]:f} s]"
+        strain_data = strain[idx].reshape(11, 31)
+        ax.cla()
+        cbar_ax.cla()
+        sns.heatmap(ax = ax, data = strain_data, xticklabels=x, yticklabels=y, cmap = "gist_rainbow_r", cbar_ax = cbar_ax)
+
+        plt.pause(0.01)
+
+    plt.show()
+
+
 if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
     # data_merge("E:/舜宇2022/ldv/数据/位移/")
@@ -188,11 +238,12 @@ if __name__ == "__main__":
     # ================================================================================
 
     # 读取原始坐标点(x, y)数据
-    coor_data = np.loadtxt("test_2022/point.txt")  # bending_strain/
+    coor_data = np.loadtxt("bending_strain/test_2022/point.txt")  # bending_strain/
     x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
+    print("x_coor size: ", x_coor.shape, "\n", "y_coor size: ", y_coor.shape)
 
     # 读取所有原始坐标点的随时间变化的位移数据
-    dis_data = np.loadtxt("test_2022/dis_data_all.txt")
+    dis_data = np.loadtxt("bending_strain/test_2022/dis_data_all.txt")
     data_shape = dis_data.shape
     print("Out of plate displacement data size: ", data_shape)
 
@@ -209,9 +260,11 @@ if __name__ == "__main__":
         plt.pause(0.1)
 
         # 查看坐标点绘制顺序
-        for coor_index, coor_xy in enumerate(coor_data):
-            plt.plot(coor_xy[1], coor_xy[2], marker='o', linestyle='')
-            plt.pause(0.01)
+        show_xy_order = 0
+        if show_xy_order:
+            for coor_index, coor_xy in enumerate(coor_data):
+                plt.plot(coor_xy[1], coor_xy[2], marker='o', linestyle='')
+                plt.pause(0.01)
 
         plt.show()
 
@@ -228,13 +281,13 @@ if __name__ == "__main__":
 
     local_load = 1
     if local_load:
-        xy_coor_deleted = np.loadtxt("test_2022/xy_coor_deleted.txt")
+        xy_coor_deleted = np.loadtxt("bending_strain/test_2022/xy_coor_deleted.txt")
         x_coor_d, y_coor_d = xy_coor_deleted[:, 0], xy_coor_deleted[:, 1]
 
-        dis_fit_lstsq_all = np.loadtxt("test_2022/dis_fit_lstsq.txt")
-        dis_fit_sg_all = np.loadtxt("test_2022/dis_fit_sg.txt")
-        strain_lstsq_all = np.loadtxt("test_2022/second_deri_sg.txt")
-        second_deri_sg_all = np.loadtxt("test_2022/strain_lstsq.txt")
+        dis_fit_lstsq_all = np.loadtxt("bending_strain/test_2022/dis_fit_lstsq.txt")
+        dis_fit_sg_all = np.loadtxt("bending_strain/test_2022/dis_fit_sg.txt")
+        strain_lstsq_all = np.loadtxt("bending_strain/test_2022/second_deri_sg.txt")
+        second_deri_sg_all = np.loadtxt("bending_strain/test_2022/strain_lstsq.txt")
     else:
         data_dict_all = {"dis_fit_lstsq": [], "dis_fit_sg": [],
                          "second_deri_sg": [], "strain_lstsq": []}
@@ -247,7 +300,7 @@ if __name__ == "__main__":
                 x_coor_deleted = np.hstack(x_list).reshape((-1, 1))
                 y_coor_deleted = np.hstack(y_list).reshape((-1, 1))
                 xy_coor_deleted = np.hstack((x_coor_deleted, y_coor_deleted))
-                np.savetxt("test_2022/xy_coor_deleted.txt", xy_coor_deleted)
+                np.savetxt("bending_strain/test_2022/xy_coor_deleted.txt", xy_coor_deleted)
                 print("xy_coor_deleted shape: ", xy_coor_deleted.shape)
                 xy_save = False
 
@@ -287,33 +340,49 @@ if __name__ == "__main__":
         if save_flag:
             for keys, values in data_dict_all.items():
                 np_values = np.array(values)
-                np.savetxt(f"test_2022/{keys}.txt", np_values)
+                np.savetxt(f"bending_strain/test_2022/{keys}.txt", np_values)
 
                 print(f"{keys} 数据大小为：", np_values.shape)
 
     # 绘制新的xy坐标位置图
-    show_xy_position = 1
+    show_xy_position = 0
     if show_xy_position:
         plt.figure("x_y_coordinate")
         plt.plot(x_coor_d, y_coor_d, marker='.', linestyle='')
 
-        plt.pause(0.1)
+        plt.pause(0.01)
 
         # 查看坐标点绘制顺序
-        for coor_index, coor_xy in enumerate(xy_coor_deleted):
-            plt.plot(coor_xy[0], coor_xy[1], marker='o', linestyle='')
-            plt.pause(0.01)
+        show_xy_order = 0
+        if show_xy_order:
+            for coor_index, coor_xy in enumerate(xy_coor_deleted):
+                plt.plot(coor_xy[0], coor_xy[1], marker='o', linestyle='')
+                plt.pause(0.1)
 
         plt.show()
 
-    # 绘制拟合后的位移的散点图、应变图
-    show_dynamic_dis_fit = 1
+    # 绘制拟合后的位移的散点图、应变图（三维显示）
+    show_dynamic_dis_fit = 0
     if show_dynamic_dis_fit:
         dis_time = dis_data[:, 0]
         # visualization_3d(x_coor_d, y_coor_d, dis_fit_lstsq_all, "scatter", dis_time)
         # visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, "trisurf", dis_time, z_label="Strain [uɛ]")
-        #
         # visualization_3d(x_coor_d, y_coor_d, dis_fit_sg_all, "scatter", dis_time)
         visualization_3d(x_coor_d, y_coor_d, second_deri_sg_all, "trisurf", dis_time, z_label="Strain [uɛ]")
 
         plt.show()
+
+    # 绘制应变热力图
+    show_strain_hotmap = 1
+    if show_strain_hotmap:
+        dis_time = dis_data[:, 0]
+
+        coor_axis = 0
+        if coor_axis:
+            x_c = x_coor_d[:31]
+            y_c = y_coor_d[::31]
+        else:
+            x_c = np.arange(1,32)
+            y_c = np.arange(1,12)
+        
+        strain_hotmap(x_c, y_c, second_deri_sg_all, dis_time)
