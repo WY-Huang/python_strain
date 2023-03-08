@@ -3,11 +3,13 @@
 """
 
 import os
+
 from tqdm import tqdm
 from matplotlib import cm
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
+from scipy.optimize import curve_fit
 
 from calculate_strain_from_dis import func_fit, sg_filter, strain_calc
 
@@ -229,6 +231,25 @@ def strain_hotmap(x, y, strain, times):
     plt.show()
 
 
+def func_surface(xy, a, b, c, d, e):
+    """
+    二次曲面函数
+    """
+    x, y = xy
+    z = a * x**2 + b * y**2 + c * x * y + d * x + e * y
+
+    return z.ravel()
+
+
+def func_surface_fit(func_s, xy, z):
+    """
+    曲面拟合
+    """
+    popt, pcov = curve_fit(func_s, xy, z)
+
+    return popt, pcov
+
+
 if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
     # data_merge("E:/舜宇2022/ldv/数据/位移/")
@@ -373,7 +394,7 @@ if __name__ == "__main__":
         plt.show()
 
     # 绘制应变热力图
-    show_strain_hotmap = 1
+    show_strain_hotmap = 0
     if show_strain_hotmap:
         dis_time = dis_data[:, 0]
 
@@ -386,3 +407,16 @@ if __name__ == "__main__":
             y_c = np.arange(1,12)
         
         strain_hotmap(x_c, y_c, dis_fit_sg_all, dis_time)
+
+
+    # 曲面拟合
+    surface_fit = 1
+    if surface_fit:
+        # XY = np.meshgrid(x_coor, y_coor)
+        XY = x_coor, y_coor
+        Z = dis_data[1, 1:]
+
+        popt, pcov = func_surface_fit(func_surface, XY, Z)
+        print("popt params: ", popt)
+
+        z_fit = 
