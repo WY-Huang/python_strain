@@ -231,12 +231,12 @@ def strain_hotmap(x, y, strain, times):
     plt.show()
 
 
-def func_surface(xy, a, b, c, d, e):
+def func_surface(xy, a, b, c, d, e, f):
     """
     二次曲面函数
     """
     x, y = xy
-    z = a * x**2 + b * y**2 + c * x * y + d * x + e * y
+    z = a * x**3 + b * y**3 + c * x * y + d * x + e * y + f
 
     return z.ravel()
 
@@ -408,15 +408,22 @@ if __name__ == "__main__":
         
         strain_hotmap(x_c, y_c, dis_fit_sg_all, dis_time)
 
-
     # 曲面拟合
     surface_fit = 1
     if surface_fit:
-        # XY = np.meshgrid(x_coor, y_coor)
+        X_mesh, Y_mesh = np.meshgrid(x_coor, y_coor)
         XY = x_coor, y_coor
         Z = dis_data[1, 1:]
 
         popt, pcov = func_surface_fit(func_surface, XY, Z)
         print("popt params: ", popt)
 
-        z_fit = 
+        z_fit = func_surface(XY, *popt)
+
+        fig_3d = plt.figure()
+        ax_3d = fig_3d.add_subplot(projection='3d')
+
+        ax_3d.scatter(x_coor, y_coor, z_fit, color='y')
+        ax_3d.scatter(x_coor, y_coor, Z, color='red')
+
+        plt.show()
