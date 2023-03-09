@@ -17,7 +17,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
     x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / (sample_num - 1))
 
     dis_data = np.loadtxt(data_path)
-    dis_data_mm = dis_data[100, 1:] / 1000
+    dis_data_mm = dis_data[50, 1:] / 1000
 
     return x_coor, dis_data_mm
 
@@ -116,7 +116,7 @@ def dynamic_visualization(x_point, data_all, figure_num=1, ylabel="displacement 
 if __name__ == "__main__":
     # 读取数据
     plate_length = 110
-    sample_num = 55
+    sample_num = 31
     x_coor, dis_data_mm = read_data('test_2022/dis_data_all.txt', sample_num, plate_length)   # dis_data_20230223/dis_data_all.txt
 
     # 仅绘制一张图
@@ -125,7 +125,7 @@ if __name__ == "__main__":
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
         # dis_data_one = dis_data_mm[max_dis_index[0]]
-        dis_data_one = dis_data_mm[:55]
+        dis_data_one = dis_data_mm[:31]
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
