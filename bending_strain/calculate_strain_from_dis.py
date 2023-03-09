@@ -14,10 +14,10 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
     """
     读取位移数据,统一位移和x坐标的单位为mm
     """
-    x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / sample_num)
+    x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / (sample_num - 1))
 
     dis_data = np.loadtxt(data_path)
-    dis_data_mm = dis_data[:, 3::2] / 1000
+    dis_data_mm = dis_data[100, 1:] / 1000
 
     return x_coor, dis_data_mm
 
@@ -51,13 +51,13 @@ def f_fit(x_coord):
     return f
 
 
-def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0):
+def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
     """
     对位移数据进行滤波处理
     """
     yhat = savgol_filter(y_noise, win_size, poly_order)    # window size 11, polynomial order 3
 
-    yhat_2_deri = savgol_filter(y_noise, win_size, poly_order, deriv)   # 方法3
+    yhat_2_deri = savgol_filter(y_noise, win_size, poly_order, deriv, delta=delta)   # 方法3
 
     return yhat, yhat_2_deri
 
@@ -115,14 +115,17 @@ def dynamic_visualization(x_point, data_all, figure_num=1, ylabel="displacement 
 
 if __name__ == "__main__":
     # 读取数据
-    x_coor, dis_data_mm = read_data('dis_data_20230223/dis_data_all.txt', 55, 110)
+    plate_length = 110
+    sample_num = 55
+    x_coor, dis_data_mm = read_data('test_2022/dis_data_all.txt', sample_num, plate_length)   # dis_data_20230223/dis_data_all.txt
 
     # 仅绘制一张图
-    only_one = 0
+    only_one = 1
     if only_one:
-        max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
-        print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
-        dis_data_one = dis_data_mm[max_dis_index[0]]
+        # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
+        # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
+        # dis_data_one = dis_data_mm[max_dis_index[0]]
+        dis_data_one = dis_data_mm[:55]
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
@@ -132,7 +135,8 @@ if __name__ == "__main__":
         plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="lstsq")
 
         # 绘制sg滤波后的数据及2阶导数
-        dis_sg, sid_sg_deri = sg_filter(dis_data_one, 21, 3, 2)
+        interval_delta = plate_length / (sample_num - 1)
+        dis_sg, sid_sg_deri = sg_filter(dis_data_one, 21, 3, 2, interval_delta)
         plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
         # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
 
@@ -146,9 +150,10 @@ if __name__ == "__main__":
 
         plt.figure(2)
         # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
-        plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
-        plt.plot(x_coor, strain * 1e6, 'y', lw=2.0, label="strain")
-        plt.plot(x_coor, np.zeros_like(x_coor), 'r', label="y = 0")
+        # plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
+        plt.plot(x_coor, strain * 1e6, 'r', lw=2.0, label="strain_lstsq")
+        plt.plot(x_coor, sid_sg_deri * 0.25 * 1e6, 'y', lw=2.0, label="strain_sg")
+        plt.plot(x_coor, np.zeros_like(x_coor), 'b', label="y = 0")
 
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
