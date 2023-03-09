@@ -8,10 +8,65 @@ from tqdm import tqdm
 from matplotlib import cm
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.animation import FuncAnimation
 import seaborn as sns
 from scipy.optimize import curve_fit
 
 from calculate_strain_from_dis import func_fit, sg_filter, strain_calc
+
+
+class Dynamic_3d_visulization():
+
+    def __init__(self, xc, yc, zc, xraw, yraw, zraw, ftimes):
+        self.xs = xc
+        self.ys = yc
+        self.zs = zc
+
+        self.xraw = xraw
+        self.yraw = yraw
+        self.zraw = zraw
+
+        self.time = ftimes
+        self.time_range = len(ftimes)
+
+        self.fig_3d = plt.figure()
+        self.ax_3d = self.fig_3d.add_subplot(projection='3d')
+
+        self.axs = self.ax_3d.scatter(0, 0, 0, marker="o", color="y")
+        self.axc = self.ax_3d.scatter(0, 0, 0, marker="^", color="r")
+
+        # axs = self.ax_3d.scatter(self.xs, self.ys, zs, marker="o", color="y")
+        # axc = self.ax_3d.scatter(self.xraw , self.yraw, zraw_i, marker="^", color="r")
+
+    def update(self, idx):
+        """
+        
+        """
+        title = f"Num.{idx} Time:[{self.time[idx]:f} s]"
+        zs = self.zs[idx]
+        zraw_i = self.zraw[idx]
+
+        self.axs._offsets3d = (self.xs, self.ys, zs)
+        # self.axc._offsets3d = (self.xs, self.ys, zraw_i)
+
+        self.ax_3d.set_title(title)
+
+        self.ax_3d.set_xlabel('X Position [mm]')
+        self.ax_3d.set_ylabel('Y Position [mm]')
+        self.ax_3d.set_zlabel('Z Position [um]')
+
+        # return self.axc
+
+
+    def animation(self):
+        """
+        
+        """
+        
+        anim = FuncAnimation(self.fig_3d, self.update, frames=self.time_range, interval=300)
+
+        plt.show()
+
 
 
 def demo_3d_visual(random_ge=True):
@@ -31,7 +86,8 @@ def demo_3d_visual(random_ge=True):
         Z = np.linspace(0, num, num ** 2).reshape(num, num)
 
 
-def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='Z Position [um]'):
+def visualization_3d(xc=None, yc=None, zc=None, xraw=None, yraw=None, zraw=None, 
+                     flag=None, times=None, z_label='Z Position [um]'):
     """
     位移数据的三维可视化（是否就是时域ODS？）
     """
@@ -45,6 +101,7 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
     for idx in range(len(times)):
         title = f"Num.{idx} Time:[{times[idx]:f} s]"
         zs = zc[idx]
+        zraw_i = zraw[idx]
 
         ax_3d.cla()
         # Plot a trisurf
@@ -53,7 +110,8 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
 
         # Plot a scatter
         elif flag == "scatter":
-            ax_3d.scatter(xs, ys, zs, marker="o")
+            ax_3d.scatter(xs, ys, zs, marker="o", color="y")
+            ax_3d.scatter(xraw, yraw, zraw_i, marker="^", color="r")
 
         # Plot a basic wireframe.
         elif flag == "wireframe":
@@ -81,7 +139,7 @@ def visualization_3d(xc=None, yc=None, zc=None, flag=None, times=None, z_label='
         # plt.colorbar(fig_tri, cax=cax)
 
         # plt.show()
-        plt.pause(0.0001)
+        plt.pause(0.1)
 
 
 def data_merge(path, save_flg=True):
@@ -266,6 +324,7 @@ if __name__ == "__main__":
     # 读取所有原始坐标点的随时间变化的位移数据
     dis_data = np.loadtxt("bending_strain/test_2022/dis_data_all.txt")
     data_shape = dis_data.shape
+    dis_data_pure = dis_data[:, 1:]
     print("Out of plate displacement data size: ", data_shape)
 
     # 绘制原始xy坐标位置图
@@ -293,7 +352,7 @@ if __name__ == "__main__":
     show_dynamic_dis = 0
     if show_dynamic_dis:
         dis_time = dis_data[:, 0]
-        visualization_3d(x_coor, y_coor, dis_data[:, 1:], "scatter", dis_time)
+        visualization_3d(x_coor, y_coor, dis_data_pure, "scatter", dis_time)
         plt.show()
 
     # ================================================================================
@@ -313,7 +372,7 @@ if __name__ == "__main__":
         data_dict_all = {"dis_fit_lstsq": [], "dis_fit_sg": [],
                          "second_deri_sg": [], "strain_lstsq": []}
         xy_save = True
-        for dis_point in tqdm(dis_data[:, 1:]):
+        for dis_point in tqdm(dis_data_pure):
 
             # 解析某一时刻的位移数据z及坐标xy
             x_list, y_list, z_list = get_x_y_z_data(x_coor, y_coor, dis_point)
@@ -383,15 +442,21 @@ if __name__ == "__main__":
         plt.show()
 
     # 绘制拟合后的位移的散点图、应变图（三维显示）
-    show_dynamic_dis_fit = 0
+    show_dynamic_dis_fit = 1
     if show_dynamic_dis_fit:
         dis_time = dis_data[:, 0]
-        # visualization_3d(x_coor_d, y_coor_d, dis_fit_lstsq_all, "scatter", dis_time)
-        # visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, "trisurf", dis_time, z_label="Strain [uɛ]")
-        # visualization_3d(x_coor_d, y_coor_d, dis_fit_sg_all, "scatter", dis_time)
-        visualization_3d(x_coor_d, y_coor_d, second_deri_sg_all, "trisurf", dis_time, z_label="Strain [uɛ]")
 
-        plt.show()
+        # method 1
+        # visualization_3d(x_coor_d, y_coor_d, dis_fit_lstsq_all, x_coor, y_coor, dis_data_pure, "scatter", dis_time)
+        # visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, "trisurf", dis_time, z_label="Strain [uɛ]")
+        visualization_3d(x_coor_d, y_coor_d, dis_fit_sg_all, x_coor, y_coor, dis_data_pure, "scatter", dis_time)
+        # visualization_3d(x_coor_d, y_coor_d, second_deri_sg_all, "trisurf", dis_time, z_label="Strain [uɛ]")
+
+        # plt.show()
+
+        # method 2
+        # draw = Dynamic_3d_visulization(x_coor_d, y_coor_d, dis_fit_lstsq_all, x_coor, y_coor, dis_data_pure, dis_time)
+        # draw.animation()
 
     # 绘制应变热力图
     show_strain_hotmap = 0
@@ -409,13 +474,13 @@ if __name__ == "__main__":
         strain_hotmap(x_c, y_c, dis_fit_sg_all, dis_time)
 
     # 曲面拟合
-    surface_fit = 1
+    surface_fit = 0
     if surface_fit:
         X_mesh, Y_mesh = np.meshgrid(x_coor, y_coor)
         XY = x_coor, y_coor
         Z = dis_data[1, 1:]
 
-        popt, pcov = func_surface_fit(func_surface, XY, Z)
+        popt, pcov = func_surface_fit(func_surface, XY, Z)  # 二次多项式拟合效果不太好
         print("popt params: ", popt)
 
         z_fit = func_surface(XY, *popt)
