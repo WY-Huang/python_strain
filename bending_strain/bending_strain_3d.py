@@ -16,7 +16,9 @@ from calculate_strain_from_dis import func_fit, sg_filter, strain_calc
 
 
 class Dynamic_3d_visulization():
-
+    """
+    通过 axs._offsets3d 更新三维数据,实际效果并不好
+    """
     def __init__(self, xc, yc, zc, xraw, yraw, zraw, ftimes):
         self.xs = xc
         self.ys = yc
