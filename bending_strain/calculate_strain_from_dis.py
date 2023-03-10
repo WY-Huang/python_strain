@@ -53,7 +53,7 @@ def f_fit(x_coord):
 
 def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
     """
-    对位移数据进行滤波处理
+    对位移数据进行滑动滤波处理
     """
     yhat = savgol_filter(y_noise, win_size, poly_order)    # window size 11, polynomial order 3
 
@@ -115,8 +115,8 @@ def dynamic_visualization(x_point, data_all, figure_num=1, ylabel="displacement 
 
 if __name__ == "__main__":
     # 读取数据
-    plate_length = 110
-    sample_num = 31
+    plate_length = 110      # 单行测点实际总长度（mm）
+    sample_num = 31         # 单行测点数量
     x_coor, dis_data_mm = read_data('test_2022/dis_data_all.txt', sample_num, plate_length)   # dis_data_20230223/dis_data_all.txt
 
     # 仅绘制一张图
