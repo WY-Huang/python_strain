@@ -21,7 +21,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
 
     dis_data = np.loadtxt(data_path)
     print("dis_data: ", dis_data.shape)
-    dis_data_mm = dis_data[1:]
+    dis_data_mm = dis_data[:, 1:] / 1000
 
     return x_coor, dis_data_mm
 
@@ -104,10 +104,10 @@ def strain_calc(x, func_dis, palte_thick):
 
 if __name__ == "__main__":
     # 读取数据
-    plate_length = 110      # 单行测点实际总长度（mm）
-    plate_thickness = 0.5   # 板的中性面到表面的厚度（mm）
-    sample_num = 31         # 单行测点数量
-    x_coor, dis_data_mm = read_data('bending_strain/test_20220310/test_dis_data.txt', sample_num, plate_length)
+    plate_length = 10      # 单行测点实际总长度（mm）
+    plate_thickness = 1   # 板的中性面到表面的厚度（mm）
+    sample_num = 21         # 单行测点数量
+    x_coor, dis_data_mm = read_data('E:/1_pycahrm_project\python_strain/bending_strain/20230315/strain_data_0315.txt', sample_num, plate_length)
 
     # 仅绘制第一行数据
     only_one = 1
@@ -115,7 +115,7 @@ if __name__ == "__main__":
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
         # dis_data_one = dis_data_mm[max_dis_index[0]]
-        dis_data_one = dis_data_mm[:31]
+        dis_data_one = dis_data_mm[10, :21]
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
@@ -153,10 +153,9 @@ if __name__ == "__main__":
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
         plt.ylabel("y_strain [uɛ]")
-        
 
         # 绘制应变片数据
-        strain_gage = np.loadtxt("bending_strain/20230315/strain_data_0315.txt")
+        strain_gage = np.loadtxt("E:/1_pycahrm_project\python_strain/bending_strain/20230315/strain_data_0315.txt")
         plt.figure(3)
-        plt.plot(strain_gage[:, 0], strain_gage[:, 1], 'b', lw=2.0, label="strain_gage")
+        plt.plot(strain_gage[:, 0], strain_gage[:, 1], 'b', label="strain_gage")
         plt.show()
