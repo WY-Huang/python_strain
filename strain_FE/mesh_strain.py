@@ -203,7 +203,7 @@ def draw_mesh(flag, color_value_x=None):
 
         # plt.tricontourf(triang, np.zeros_like(x))
         plt.triplot(triang, 'go-')
-        cbar = fig.colorbar(sub)
+        # cbar = fig.colorbar(sub)
 
     plt.show()
 
@@ -300,4 +300,4 @@ if __name__ == "__main__":
     draw_mesh("strain_mesh", color_value_y)
     draw_mesh("strain_mesh", color_value_xy)
 
-    # plt.show()
+    plt.show()

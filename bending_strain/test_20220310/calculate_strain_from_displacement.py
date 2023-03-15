@@ -153,4 +153,10 @@ if __name__ == "__main__":
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
         plt.ylabel("y_strain [uɛ]")
+        
+
+        # 绘制应变片数据
+        strain_gage = np.loadtxt("bending_strain/20230315/strain_data_0315.txt")
+        plt.figure(3)
+        plt.plot(strain_gage[:, 0], strain_gage[:, 1], 'b', lw=2.0, label="strain_gage")
         plt.show()

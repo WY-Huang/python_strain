@@ -17,7 +17,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
     x_coor = np.arange(0, sample_num).reshape(sample_num, 1) * (plate_length / (sample_num - 1))
 
     dis_data = np.loadtxt(data_path)
-    dis_data_mm = dis_data[50, 1:] / 1000
+    dis_data_mm = dis_data[:, 1:] / 1000
 
     return x_coor, dis_data_mm
 
@@ -115,9 +115,9 @@ def dynamic_visualization(x_point, data_all, figure_num=1, ylabel="displacement 
 
 if __name__ == "__main__":
     # 读取数据
-    plate_length = 110      # 单行测点实际总长度（mm）
-    sample_num = 31         # 单行测点数量
-    x_coor, dis_data_mm = read_data('test_2022/dis_data_all.txt', sample_num, plate_length)   # dis_data_20230223/dis_data_all.txt
+    plate_length = 10      # 单行测点实际总长度（mm）
+    sample_num = 21         # 单行测点数量
+    x_coor, dis_data_mm = read_data('bending_strain/20230315/dis_data_0315.txt', sample_num, plate_length)   # dis_data_20230223/dis_data_all.txt
 
     # 仅绘制一张图
     only_one = 1
@@ -125,18 +125,18 @@ if __name__ == "__main__":
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
         # dis_data_one = dis_data_mm[max_dis_index[0]]
-        dis_data_one = dis_data_mm[:31]
+        dis_data_one = dis_data_mm[1, :21]
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
 
         co_w, func, y_estimate_lstsq = func_fit(x_coor, dis_data_one)
 
-        plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="lstsq")
+        plt.plot(x_coor, y_estimate_lstsq, 'r', label="lstsq", marker=".", linestyle='')
 
         # 绘制sg滤波后的数据及2阶导数
         interval_delta = plate_length / (sample_num - 1)
-        dis_sg, sid_sg_deri = sg_filter(dis_data_one, 21, 3, 2, interval_delta)
+        dis_sg, sid_sg_deri = sg_filter(dis_data_one, 5, 3, 2, interval_delta)
         plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
         # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
 

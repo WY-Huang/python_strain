@@ -88,22 +88,22 @@ def demo_3d_visual(random_ge=True):
         Z = np.linspace(0, num, num ** 2).reshape(num, num)
 
 
-def visualization_3d(xc=None, yc=None, zc=None, xraw=None, yraw=None, zraw=None, 
-                     flag=None, times=None, z_label='Z Position [um]'):
+def visualization_3d(xc, yc, zc, xraw=None, yraw=None, zraw=[], 
+                    flag=None, times=[], z_label='Z Position [um]'):
     """
-    位移数据的三维可视化（是否就是时域ODS？）
+    位移数据的三维可视化（是否就是时域ODS？是的）
     """
     fig_3d = plt.figure()
     ax_3d = fig_3d.add_subplot(projection='3d')
 
-    cax = ax_3d.inset_axes([1.03, 0, 0.1, 1], transform=ax_3d.transAxes) # Colorbar is held by `cax`.
+    # cax = ax_3d.inset_axes([1.03, 0, 0.1, 1], transform=ax_3d.transAxes) # Colorbar is held by `cax`.
     # plt.ion()
 
     xs, ys = xc, yc
     for idx in range(len(times)):
         title = f"Num.{idx} Time:[{times[idx]:f} s]"
         zs = zc[idx]
-        zraw_i = zraw[idx]
+        # zraw_i = zraw[idx]
 
         ax_3d.cla()
         # Plot a trisurf
@@ -113,7 +113,8 @@ def visualization_3d(xc=None, yc=None, zc=None, xraw=None, yraw=None, zraw=None,
         # Plot a scatter
         elif flag == "scatter":
             ax_3d.scatter(xs, ys, zs, marker="o", color="y")
-            ax_3d.scatter(xraw, yraw, zraw_i, marker="^", color="r")
+            if xraw != None:
+                ax_3d.scatter(xraw, yraw, zraw_i, marker="^", color="r")
 
         # Plot a basic wireframe.
         elif flag == "wireframe":
@@ -144,15 +145,15 @@ def visualization_3d(xc=None, yc=None, zc=None, xraw=None, yraw=None, zraw=None,
         plt.pause(0.1)
 
 
-def data_merge(path, save_flg=True):
+def data_merge(source_path, save_path, point_num, save_flg=True):
     """
     将每个测点的位移数据整合到一个文件
     """
     # for file in os.listdir(path):
     #     file_name_list = file.split("_")
     #     if file_name_list[2] == "Vib.txt":
-    for index in range(1, 369):
-        dis = np.loadtxt(path + f"0_{index}_Vib.txt")
+    for index in range(1, point_num+1):
+        dis = np.loadtxt(source_path + f"0_{index}_Vib.txt")
 
         if index == 1:
             data_all = dis
@@ -161,7 +162,7 @@ def data_merge(path, save_flg=True):
 
     # 第一列为时间，后续每一列为一个测点随时间变化的位移数据
     if save_flg:
-        np.savetxt("test_2022/dis_data_all.txt", data_all)
+        np.savetxt(save_path, data_all)
     print("数据大小为：", data_all.shape)
 
 
@@ -312,19 +313,19 @@ def func_surface_fit(func_s, xy, z):
 
 if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
-    # data_merge("E:/舜宇2022/ldv/数据/位移/")
+    # data_merge("bending_strain/20230315/", "bending_strain/20230315/strain_data_0315.txt", 63)
 
     # ================================================================================
     # （1）原始位移及坐标数据读取显示
     # ================================================================================
 
     # 读取原始坐标点(x, y)数据
-    coor_data = np.loadtxt("bending_strain/test_2022/point.txt")  # bending_strain/
+    coor_data = np.loadtxt("bending_strain/20230315/point.txt")  # bending_strain/
     x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
     print("x_coor size: ", x_coor.shape, "\n", "y_coor size: ", y_coor.shape)
 
     # 读取所有原始坐标点的随时间变化的位移数据
-    dis_data = np.loadtxt("bending_strain/test_2022/dis_data_all.txt")
+    dis_data = np.loadtxt("bending_strain/20230315/dis_data_0315.txt")
     data_shape = dis_data.shape
     dis_data_pure = dis_data[:, 1:]
     print("Out of plate displacement data size: ", data_shape)
@@ -354,7 +355,7 @@ if __name__ == "__main__":
     show_dynamic_dis = 0
     if show_dynamic_dis:
         dis_time = dis_data[:, 0]
-        visualization_3d(x_coor, y_coor, dis_data_pure, "scatter", dis_time)
+        visualization_3d(x_coor, y_coor, dis_data_pure, flag="scatter", times=dis_time)
         plt.show()
 
     # ================================================================================
@@ -444,7 +445,7 @@ if __name__ == "__main__":
         plt.show()
 
     # 绘制拟合后的位移的散点图、应变图（三维显示）
-    show_dynamic_dis_fit = 1
+    show_dynamic_dis_fit = 0
     if show_dynamic_dis_fit:
         dis_time = dis_data[:, 0]
 
