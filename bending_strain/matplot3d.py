@@ -143,4 +143,4 @@ if __name__ == "__main__":
     # test_wireframe()
 
     # 3> 3d曲面图绘制
-    # surface_plot()
+    surface_plot()
