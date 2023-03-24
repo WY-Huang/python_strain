@@ -55,6 +55,33 @@ def func_fit(x, dis, M=3):
     return co_w, func, y_estimate_lstsq
 
 
+def strain_calc(x, func_dis, palte_thick):
+    """
+    根据整个数据最小二乘法拟合后的位移方程的2阶导数计算应变
+    param:
+        x: x轴坐标点（mm）
+        func_dis: 拟合后的位移函数
+        palte_thick: 平板厚度（mm）
+    return:
+        first_deri: 一阶导数
+        second_deri: 二阶导数
+        strain: 应变（uɛ）
+    """
+    func_1_deri = np.polyder(func_dis, 1)
+    first_deri = []
+    func_2_deri = np.polyder(func_dis, 2)
+    second_deri = []
+    for _, x_value in enumerate(x):
+        first_value = func_1_deri(x_value)
+        first_deri.append(first_value)
+
+        second_value = func_2_deri(x_value)     # 二阶导数计算
+        second_deri.append(second_value)
+
+    strain = np.array(second_deri) * palte_thick * 1e6
+
+    return first_deri, second_deri, strain
+
 
 def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
     """
@@ -72,34 +99,6 @@ def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
     yhat_2_deri = savgol_filter(y_noise, win_size, poly_order, deriv, delta=delta)   # 计算位移对位置的二阶导数
 
     return yhat, yhat_2_deri
-
-
-def strain_calc(x, func_dis, palte_thick):
-    """
-    根据整个数据最小二乘法拟合后的位移方程的2阶导数计算应变
-    param:
-        x: x轴坐标点（mm）
-        func_dis: 拟合后的位移函数
-        palte_thick: 平板厚度（mm）
-    return:
-        first_deri: 一阶导数
-        second_deri: 二阶导数
-        strain: 应变（ɛ）
-    """
-    func_1_deri = np.polyder(func_dis, 1)
-    first_deri = []
-    func_2_deri = np.polyder(func_dis, 2)
-    second_deri = []
-    for _, x_value in enumerate(x):
-        first_value = func_1_deri(x_value)
-        first_deri.append(first_value)
-
-        second_value = func_2_deri(x_value)     # 二阶导数计算
-        second_deri.append(second_value)
-
-    strain = np.array(second_deri) * palte_thick
-
-    return first_deri, second_deri, strain
 
 
 def data_merge(source_path, save_path, point_num, save_flg=True):
@@ -185,8 +184,7 @@ if __name__ == "__main__":
         plt.ylabel("y_displacement [mm]")
 
         # 绘制一/二阶导数曲线及应变曲线
-        first_deri, second_deri, strain = strain_calc(x_coor, func, plate_thickness)
-        strain_lstsq = strain * 1e6
+        first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
 
         strain_sg = sid_sg_deri * plate_thickness * 1e6
 
