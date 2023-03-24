@@ -17,16 +17,16 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
         x_coor: x方向坐标（mm）
         dis_data_mm: 面外位移z（mm）
     """
-    x_coor = np.arange(sample_num).reshape(-1, 1) * (plate_length / (sample_num - 1))
+    x_coor = np.arange(sample_num) * (plate_length / (sample_num - 1))  # .reshape(1, -1)
 
     dis_data = np.loadtxt(data_path)
-    print("dis_data: ", dis_data.shape)
-    dis_data_mm = dis_data[:, 1:] / 1000
+    # print("dis_data: ", dis_data.shape)
+    dis_data_mm = dis_data[:, 1:] / 50
 
     return x_coor, dis_data_mm
 
 
-def func_fit(x, dis, M=4):
+def func_fit(x, dis, M=3):
     """
     方法一：最小二乘法、多项式拟合单行位移数据，曲线过于平滑，会丢失局部特征，误差随阶次增加。
 
@@ -102,34 +102,81 @@ def strain_calc(x, func_dis, palte_thick):
     return first_deri, second_deri, strain
 
 
-if __name__ == "__main__":
-    # 读取数据
-    plate_length = 10      # 单行测点实际总长度（mm）
-    plate_thickness = 1   # 板的中性面到表面的厚度（mm）
-    sample_num = 21         # 单行测点数量
-    x_coor, dis_data_mm = read_data('E:/1_pycahrm_project\python_strain/bending_strain/20230315/strain_data_0315.txt', sample_num, plate_length)
+def data_merge(source_path, save_path, point_num, save_flg=True):
+    """
+    将每个测点的位移数据整合到一个文件
+    """
+    # for file in os.listdir(path):
+    #     file_name_list = file.split("_")
+    #     if file_name_list[2] == "Vib.txt":
+    for index in range(1, point_num+1):
+        dis = np.loadtxt(source_path + f"0_{index}_Ref.txt")
 
+        if index == 1:
+            data_all = dis
+        else:
+            data_all = np.column_stack((data_all, dis[:, 1]))
+
+    # 第一列为时间，后续每一列为一个测点随时间变化的位移数据
+    if save_flg:
+        np.savetxt(save_path, data_all)
+    print("数据大小为：", data_all.shape)
+
+
+def np_move_avg(data, win_size, mode="valid"):
+    """
+    滑动平均算法
+    """
+    data_p = data.copy()
+    crop_data = np.convolve(data_p, np.ones(win_size) / win_size, mode=mode)
+    insert_length = win_size // 2
+    data_length = len(data_p)
+    data_p[insert_length:data_length-insert_length] = crop_data
+    return data_p
+
+
+if __name__ == "__main__":
+    # # 整合数据并保存到test_2022/dis_data_all.txt
+    # data_merge("/home/wanyel/vs_code/python_strain/bending_strain/export_0323/", 
+    #            "/home/wanyel/vs_code/python_strain/bending_strain/export_0323/strain_merge_20230323.txt", 155)
+
+    # 读取数据
+    plate_length = 40.0      # 单行测点实际总长度（mm），实际长度46.2mm
+    plate_thickness = 1.71   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
+    sample_num = 31         # 单行测点数量
+    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/export_0323/dis_merge_20230323.txt', sample_num, plate_length)
+
+    # 去除积分导致的每个点的第一个为0的数据
+    x_coor = x_coor[1:]
+
+    print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
     # 仅绘制第一行数据
     only_one = 1
     if only_one:
+
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
-        # dis_data_one = dis_data_mm[max_dis_index[0]]
-        dis_data_one = dis_data_mm[10, :21]
+        # dis_data_one = dis_data_mm[max_dis_index[0], 1:31]
+        dis_data_one = dis_data_mm[4919, 1:31] # 0-31-62-93-124-155
+        dis_data_filter = np_move_avg(dis_data_one, 5)
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
+        plt.plot(x_coor, dis_data_filter, 'mo', label="dis_filter")
 
-        co_w, func, y_estimate_lstsq = func_fit(x_coor, dis_data_one)   # 单行全部位移数据最小二乘拟合
+        co_w, func, y_estimate_lstsq = func_fit(x_coor, dis_data_filter)   # 单行全部位移数据最小二乘拟合
 
-        plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="dis_lstsq")
+        # plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="dis_lstsq")
 
         # 绘制sg滤波后的数据及2阶导数
         interval_delta = plate_length / (sample_num - 1)
         win_size = sample_num // 5      # 滑动窗口选取为测点数的1/5，且为奇数
         if win_size % 2 == 0:
             win_size += 1
-        dis_sg, sid_sg_deri = sg_filter(dis_data_one, 5, 3, 2, interval_delta) # 
+        if win_size <= 11:
+            win_size = 11
+
+        dis_sg, sid_sg_deri = sg_filter(dis_data_filter, win_size, 3, 2, interval_delta) # 
         plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
         # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
 
@@ -146,7 +193,7 @@ if __name__ == "__main__":
         plt.figure(2)
         # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
         # plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
-        plt.plot(x_coor, strain_lstsq, 'r', lw=2.0, label="strain_lstsq")
+        # plt.plot(x_coor, strain_lstsq, 'r', lw=2.0, label="strain_lstsq")
         plt.plot(x_coor, strain_sg, 'y', lw=2.0, label="strain_sg")
         plt.plot(x_coor, np.zeros_like(x_coor), 'b', label="y = 0")
 
@@ -155,7 +202,18 @@ if __name__ == "__main__":
         plt.ylabel("y_strain [uɛ]")
 
         # 绘制应变片数据
-        strain_gage = np.loadtxt("E:/1_pycahrm_project\python_strain/bending_strain/20230315/strain_data_0315.txt")
-        plt.figure(3)
-        plt.plot(strain_gage[:, 0], strain_gage[:, 1], 'b', label="strain_gage")
+        strain = 1
+        if strain:
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0323/strain_merge_20230323.txt")
+
+            strain_gage_value = strain_gage[:, 1:] / 500000 / 2.5 / 2.08 * 1000000
+            LDV_mean_strain = np.sum(strain_lstsq[12:20]) / 8
+
+            plt.figure(3)
+            plt.plot(strain_gage[:, 0], strain_gage_value[:, 1], 'b', label="strain_gage")  # , marker='.'
+            # plt.plot(1, LDV_mean_strain, 'r', label="LDV_mean_strain", marker='^')
+            plt.legend()
+            plt.xlabel("x_time [s]")
+            plt.ylabel("y_strain [uɛ]")
+        
         plt.show()

@@ -313,7 +313,8 @@ def func_surface_fit(func_s, xy, z):
 
 if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
-    # data_merge("bending_strain/20230315/", "bending_strain/20230315/strain_data_0315.txt", 63)
+    data_merge("/home/wanyel/vs_code/python_strain/bending_strain/export_20230323/", 
+               "/home/wanyel/vs_code/python_strain/bending_strain/export_20230323/dis_merge_20230323.txt", 93)
 
     # ================================================================================
     # （1）原始位移及坐标数据读取显示
