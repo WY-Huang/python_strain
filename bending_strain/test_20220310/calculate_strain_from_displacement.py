@@ -21,7 +21,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
 
     dis_data = np.loadtxt(data_path)
     # print("dis_data: ", dis_data.shape)
-    dis_data_mm = dis_data[:, 1:] / 50
+    dis_data_mm = dis_data[:, 1:]       # 删除第一列时间信息
 
     return x_coor, dis_data_mm
 
@@ -101,7 +101,7 @@ def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
     return yhat, yhat_2_deri
 
 
-def data_merge(source_path, save_path, point_num, save_flg=True):
+def data_merge(source_path, save_path, point_num, save_flg=True, merge_type="Vib"):
     """
     将每个测点的位移数据整合到一个文件
     """
@@ -109,7 +109,7 @@ def data_merge(source_path, save_path, point_num, save_flg=True):
     #     file_name_list = file.split("_")
     #     if file_name_list[2] == "Vib.txt":
     for index in range(1, point_num+1):
-        dis = np.loadtxt(source_path + f"0_{index}_Ref.txt")
+        dis = np.loadtxt(source_path + f"0_{index}_{merge_type}.txt")
 
         if index == 1:
             data_all = dis
@@ -135,15 +135,19 @@ def np_move_avg(data, win_size, mode="valid"):
 
 
 if __name__ == "__main__":
-    # # 整合数据并保存到test_2022/dis_data_all.txt
-    # data_merge("/home/wanyel/vs_code/python_strain/bending_strain/export_0323/", 
-    #            "/home/wanyel/vs_code/python_strain/bending_strain/export_0323/strain_merge_20230323.txt", 155)
+    # 整合数据并保存到test_2022/dis_data_all.txt
+    merge = 0
+    if merge:
+        data_merge("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/", 
+                "/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt", 
+                303,
+                merge_type="Ref")
 
     # 读取数据
     plate_length = 40.0      # 单行测点实际总长度（mm），实际长度46.2mm
     plate_thickness = 1.71   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
-    sample_num = 31         # 单行测点数量
-    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/export_0323/dis_merge_20230323.txt', sample_num, plate_length)
+    sample_num = 101         # 单行测点数量
+    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/dis_merge_20230326_1.txt', sample_num, plate_length)
 
     # 去除积分导致的每个点的第一个为0的数据
     x_coor = x_coor[1:]
@@ -156,8 +160,8 @@ if __name__ == "__main__":
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
         # dis_data_one = dis_data_mm[max_dis_index[0], 1:31]
-        dis_data_one = dis_data_mm[4919, 1:31] # 0-31-62-93-124-155
-        dis_data_filter = np_move_avg(dis_data_one, 5)
+        dis_data_one = dis_data_mm[9, 1:101] # 0-31-62-93-124-155
+        dis_data_filter = np_move_avg(dis_data_one, 11)
         # 绘制原始位移散点及拟合后的位移曲线
         plt.figure(1)
         plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
@@ -202,10 +206,10 @@ if __name__ == "__main__":
         # 绘制应变片数据
         strain = 1
         if strain:
-            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0323/strain_merge_20230323.txt")
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt")
 
-            strain_gage_value = strain_gage[:, 1:] / 500000 / 2.5 / 2.08 * 1000000
-            LDV_mean_strain = np.sum(strain_lstsq[12:20]) / 8
+            strain_gage_value = strain_gage[:, 1:]
+            # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
             plt.figure(3)
             plt.plot(strain_gage[:, 0], strain_gage_value[:, 1], 'b', label="strain_gage")  # , marker='.'
