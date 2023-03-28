@@ -78,7 +78,7 @@ def strain_calc(x, func_dis, palte_thick):
         second_value = func_2_deri(x_value)     # 二阶导数计算
         second_deri.append(second_value)
 
-    strain = np.array(second_deri) * palte_thick * 1e6
+    strain = np.array(second_deri) * palte_thick * (-1) * 1e6
 
     return first_deri, second_deri, strain
 

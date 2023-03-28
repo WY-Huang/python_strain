@@ -54,14 +54,13 @@ def strain_calc(x, func_dis, palte_thick):
         second_value = func_2_deri(x_value)     # 二阶导数计算
         second_deri.append(second_value)
 
-    strain = np.array(second_deri) * palte_thick
+    strain = np.array(second_deri) * palte_thick * (-1) * 1e6
 
     return first_deri, second_deri, strain
 
 
-
 if __name__ == "__main__":
-    raw_data = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/verifacation/plate_point_dis.txt")
+    raw_data = np.loadtxt("E:/1_pycahrm_project/python_strain/bending_strain/verifacation/plate_point_dis.txt")
     print(raw_data.shape)
     pixel_x = 500 / (1220 - 120)
     x_p = raw_data[:, 0]
@@ -69,16 +68,15 @@ if __name__ == "__main__":
 
     pixel_y = 600 / (394 - 44)
     y_p = raw_data[:, 1]
-    y = (220 - y_p) * pixel_y / 1000
+    y = (220 - y_p) * pixel_y / 1e3
 
     # plt.plot(x, y, 'y', lw=2.0, label="dis_raw")
-    
 
-    co_w, func, y_estimate_lstsq = func_fit(x, y, M=6)   # 单行全部位移数据最小二乘拟合
-    first_deri, second_deri, strain_lstsq = strain_calc(x, func, 1.5)
+    co_w, func, y_estimate_lstsq = func_fit(x, y, M=5)   # 单行全部位移数据最小二乘拟合
+    first_deri, second_deri, strain_lstsq = strain_calc(x, func, 2.5)
 
     # plt.plot(x, y_estimate_lstsq, 'r', lw=2.0, label="dis_lstsq")
-
+    # plt.plot(x, first_deri, 'k', lw=2.0, label="first_deri")
     plt.plot(x, strain_lstsq, 'b', lw=2.0, label="strain_lstsq")
 
     plt.legend()
