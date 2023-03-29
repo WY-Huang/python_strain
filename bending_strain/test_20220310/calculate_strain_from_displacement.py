@@ -165,7 +165,7 @@ if __name__ == "__main__":
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
 
     # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
-    only_one = 10
+    only_one = 0
     if only_one:
 
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
@@ -268,7 +268,7 @@ if __name__ == "__main__":
             strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt")
 
             strain_gage_value = strain_gage[:, 1:]
-            strain_gage_value = strain_gage_value / 2e5 * 4 * 1e6 / 10 / 2.08 
+            strain_gage_value = strain_gage_value / 2e5 * 4 * 1e6 / 10 / 2.08
             # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
             plt.figure("LDV vs Strain_Gage")
