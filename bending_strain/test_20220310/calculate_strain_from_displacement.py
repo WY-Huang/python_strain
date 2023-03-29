@@ -33,26 +33,37 @@ def func_fit(x, dis, M=3):
     param:
         x: x方向坐标（mm）
         dis: 面外位移z（mm）
-        M: 多项式阶次
+        M: 最大多项式阶次
     return:
         co_w: 拟合后多项式系数
+        resl: 拟合残差
         func: 拟合后位移方程
         y_estimate_lstsq: 拟合后测点面外位移z
     """
-    X = x
-    for i in range(2, M+1):
-        X = np.column_stack((X, pow(x, i)))
+    co_w_list = []
+    resl_list = []
+    y_estimate_list = []
+    for M_i in range(3, M+1):
 
-    X = np.insert(X, 0, [1], 1)
+        X = x.copy()
+        for i in range(2, M_i+1):
+            X = np.column_stack((X, pow(x, i)))
 
-    co_w, resl, _, _ = np.linalg.lstsq(X, dis, rcond=None)  # resl为残差的平方和
-    # print("co_w:", co_w, "\nresl", resl)
-    # print(co_w[::-1])
-    func = np.poly1d(co_w[::-1])    # 构建多项式
+        X = np.insert(X, 0, [1], 1)
 
-    y_estimate_lstsq = X.dot(co_w)
+        co_w, resl, _, _ = np.linalg.lstsq(X, dis, rcond=None)  # resl为残差的平方和
+        y_estimate_lstsq = X.dot(co_w)
+        # print("co_w:", co_w[::-1], "\nresl", resl, "\ny_estimate_lstsq", y_estimate_lstsq)
 
-    return co_w, func, y_estimate_lstsq
+        co_w_list.append(co_w)
+        resl_list.append(resl)
+        y_estimate_list.append(y_estimate_lstsq)
+        
+    min_index = resl_list.index(min(resl_list))
+
+    func = np.poly1d(co_w_list[min_index][::-1])                            # 构建多项式
+
+    return co_w_list[min_index], func, y_estimate_list[min_index], resl_list
 
 
 def strain_calc(x, func_dis, palte_thick):
@@ -78,12 +89,12 @@ def strain_calc(x, func_dis, palte_thick):
         second_value = func_2_deri(x_value)     # 二阶导数计算
         second_deri.append(second_value)
 
-    strain = np.array(second_deri) * palte_thick * (-1) * 1e6
+    strain = np.array(second_deri) * palte_thick * 0.5 * (-1) * 1e6
 
     return first_deri, second_deri, strain
 
 
-def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
+def sg_filter(y_noise, win_size=11, poly_order=3, deriv=0, delta=1):
     """
     方法二：对位移数据进行滑动滤波处理，可保留局部特征。
 
@@ -101,7 +112,7 @@ def sg_filter(y_noise, win_size=None, poly_order=None, deriv=0, delta=1):
     return yhat, yhat_2_deri
 
 
-def data_merge(source_path, save_path, point_num, save_flg=True, merge_type="Vib"):
+def data_merge(source_path, save_file_name, point_num, save_flg=True, merge_type="Vib"):
     """
     将每个测点的位移数据整合到一个文件
     """
@@ -118,13 +129,13 @@ def data_merge(source_path, save_path, point_num, save_flg=True, merge_type="Vib
 
     # 第一列为时间，后续每一列为一个测点随时间变化的位移数据
     if save_flg:
-        np.savetxt(save_path, data_all)
+        np.savetxt(save_file_name, data_all)
     print("数据大小为：", data_all.shape)
 
 
 def np_move_avg(data, win_size, mode="valid"):
     """
-    滑动平均算法
+    滑动平均滤波算法
     """
     data_p = data.copy()
     crop_data = np.convolve(data_p, np.ones(win_size) / win_size, mode=mode)
@@ -145,7 +156,7 @@ if __name__ == "__main__":
 
     # 读取数据
     plate_length = 40.0      # 单行测点实际总长度（mm），实际长度46.2mm
-    plate_thickness = 1.71   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
+    plate_thickness = 3.42   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
     sample_num = 101         # 单行测点数量
     x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/dis_merge_20230326_1.txt', sample_num, plate_length)
 
@@ -153,69 +164,115 @@ if __name__ == "__main__":
     x_coor = x_coor[1:]
 
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
-    # 仅绘制第一行数据
-    only_one = 1
+    # 仅绘制一行数据
+    only_one = 3
     if only_one:
 
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
         # dis_data_one = dis_data_mm[max_dis_index[0], 1:31]
-        dis_data_one = dis_data_mm[9, 1:101] # 0-31-62-93-124-155
-        dis_data_filter = np_move_avg(dis_data_one, 11)
-        # 绘制原始位移散点及拟合后的位移曲线
-        plt.figure(1)
-        plt.plot(x_coor, dis_data_one, 'bo', label="dis_noise")
-        plt.plot(x_coor, dis_data_filter, 'mo', label="dis_filter")
+        dis_data_one = dis_data_mm[only_one, 1:101] # 0-31-62-93-124-155
 
-        co_w, func, y_estimate_lstsq = func_fit(x_coor, dis_data_filter)   # 单行全部位移数据最小二乘拟合
+        # 滤波处理
+        # dis_data_filter = np_move_avg(dis_data_one, 11)     # 1）滑动平均
 
-        # plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="dis_lstsq")
-
-        # 绘制sg滤波后的数据及2阶导数
         interval_delta = plate_length / (sample_num - 1)
-        win_size = sample_num // 5      # 滑动窗口选取为测点数的1/5，且为奇数
+        win_size = sample_num // 5                          # 滑动窗口选取为测点数的1/5，且为奇数
         if win_size % 2 == 0:
             win_size += 1
         if win_size <= 11:
             win_size = 11
 
-        dis_sg, sid_sg_deri = sg_filter(dis_data_filter, win_size, 3, 2, interval_delta) # 
-        plt.plot(x_coor, dis_sg, 'y', lw=2.0, label="dis_sg")
-        # plt.plot(x_coor, sid_sg_deri, 'p', lw=2.0, label="sid_sg_deri")
+        dis_sg, sid_sg_deri = sg_filter(dis_data_one, win_size, 2, 2, interval_delta) # 2）绘制sg滤波后的数据及2阶导数
 
+        dis_data_filter = np_move_avg(dis_sg, 11)     # 1）滑动平均
+
+        # ================================================================== #
+        # 绘制原始位移散点及拟合后的位移曲线，figure(1)
+        # ================================================================== #
+        co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_data_filter, 5)   # 单行全部位移数据最小二乘拟合
+        # print("resl_lists: ", resl_lists)
+
+        plt.figure("Displacement")
+        plt.plot(x_coor, dis_data_one, 'bo', label="dis_raw")
+        plt.plot(x_coor, dis_data_filter, 'mo', label="dis_moveA_filter")
+        plt.plot(x_coor, y_estimate_lstsq, 'r', lw=2.0, label="dis_lstsq")
+        plt.plot(x_coor, dis_sg, 'yo', lw=2.0, label="dis_sg")
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
         plt.ylabel("y_displacement [mm]")
 
-        # 绘制一/二阶导数曲线及应变曲线
+        # ================================================================== #
+        # 绘制一/二阶导数曲线及应变曲线，figure(2), 应变片范围点号40-64
+        # ================================================================== #
         first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
-
         strain_sg = sid_sg_deri * plate_thickness * 1e6
 
-        plt.figure(2)
+        plt.figure("Strain")
         # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
         # plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
-        # plt.plot(x_coor, strain_lstsq, 'r', lw=2.0, label="strain_lstsq")
-        plt.plot(x_coor, strain_sg, 'y', lw=2.0, label="strain_sg")
+        plt.plot(x_coor, strain_lstsq, 'ro', lw=2.0, label="strain_lstsq")
+        # plt.plot(x_coor, strain_sg, 'y', lw=2.0, label="strain_sg")
         plt.plot(x_coor, np.zeros_like(x_coor), 'b', label="y = 0")
-
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
         plt.ylabel("y_strain [uɛ]")
 
-        # 绘制应变片数据
-        strain = 1
-        if strain:
+        # ================================================================== #
+        # 绘制应变片数据，figure(3)
+        # ================================================================== #
+        show_strain = 1
+        if show_strain:
             strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt")
 
-            strain_gage_value = strain_gage[:, 1:]
+            strain_gage_value = strain_gage[:, 1:] * (-1)
             # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
-            plt.figure(3)
-            plt.plot(strain_gage[:, 0], strain_gage_value[:, 1], 'b', label="strain_gage")  # , marker='.'
-            # plt.plot(1, LDV_mean_strain, 'r', label="LDV_mean_strain", marker='^')
+            plt.figure("LDV vs Strain_Gage")
+            plt.plot(strain_gage[only_one, 0], strain_gage_value[only_one, 50], 'bo', label="strain_gage")  # , marker='.'
+            plt.plot(1, strain_lstsq[50], 'r', label="LDV_mean_strain", marker='^')
             plt.legend()
             plt.xlabel("x_time [s]")
             plt.ylabel("y_strain [uɛ]")
         
         plt.show()
+
+    else:
+        ldv_strain = []
+        for data_t in range(dis_data_mm.shape[0]):
+            dis_data_one = dis_data_mm[data_t, 1:101]
+
+            # 滤波处理
+            # dis_data_filter = np_move_avg(dis_data_one, 11)     # 1）滑动平均
+
+            interval_delta = plate_length / (sample_num - 1)
+            win_size = sample_num // 5                          # 滑动窗口选取为测点数的1/5，且为奇数
+            if win_size % 2 == 0:
+                win_size += 1
+            if win_size <= 11:
+                win_size = 11
+
+            dis_sg, sid_sg_deri = sg_filter(dis_data_one, win_size, 2, 2, interval_delta) # 2）绘制sg滤波后的数据及2阶导数
+            dis_data_filter = np_move_avg(dis_sg, 11)     # 1）滑动平均
+
+            co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_data_filter, 5)   # 单行全部位移数据最小二乘拟合
+            first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
+
+            ldv_strain.append(strain_lstsq[50])
+
+        show_strain = 1
+        if show_strain:
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt")
+
+            strain_gage_value = strain_gage[:, 1:]
+            strain_gage_value = strain_gage_value / 2e5 * 4 * 1e6 / 10 / 2.08 
+            # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
+
+            plt.figure("LDV vs Strain_Gage")
+            plt.plot(strain_gage[:, 0], strain_gage_value[:, 50], 'b', label="strain_gage", marker='.')  # , marker='.'
+            plt.plot(strain_gage[:, 0], ldv_strain, 'r', label="LDV_mean_strain", marker='^')
+            plt.legend()
+            plt.xlabel("x_time [s]")
+            plt.ylabel("y_strain [uɛ]")
+            
+            plt.show()
