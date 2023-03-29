@@ -3,12 +3,12 @@ import matplotlib.pyplot as plt
 import pyuff
 
 
-uff_file = pyuff.UFF('E:/1_pycahrm_project/python_strain/bending_strain/test_uff/6.uff')
+uff_file = pyuff.UFF('/home/wanyel/vs_code/python_strain/bending_strain/test_uff/export_time_500mVpp.uff')
 data_type = uff_file.get_set_types()    # 文件中存放的数据类型
 print(data_type)
 data_num = uff_file.get_n_sets()        # 有效数据集的数量
 
-print_str = "".split()
+print_str = "3".split()
 
 if '1' in print_str:
     data_1 = uff_file.read_sets(0)            # 第1个数据类型：151，文件头，包含uff文件的基本信息
