@@ -162,10 +162,10 @@ if __name__ == "__main__":
 
     # 去除积分导致的每个点的第一个为0的数据
     x_coor = x_coor[1:]
-
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
-    # 仅绘制一行数据
-    only_one = 3
+
+    # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
+    only_one = 10
     if only_one:
 
         # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
@@ -188,7 +188,7 @@ if __name__ == "__main__":
         dis_data_filter = np_move_avg(dis_sg, 11)     # 1）滑动平均
 
         # ================================================================== #
-        # 绘制原始位移散点及拟合后的位移曲线，figure(1)
+        # 绘制原始位移散点及拟合后的位移曲线
         # ================================================================== #
         co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_data_filter, 5)   # 单行全部位移数据最小二乘拟合
         # print("resl_lists: ", resl_lists)
@@ -203,7 +203,7 @@ if __name__ == "__main__":
         plt.ylabel("y_displacement [mm]")
 
         # ================================================================== #
-        # 绘制一/二阶导数曲线及应变曲线，figure(2), 应变片范围点号40-64
+        # 绘制一/二阶导数曲线及应变曲线，应变片范围点号40-64
         # ================================================================== #
         first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
         strain_sg = sid_sg_deri * plate_thickness * 1e6
@@ -219,7 +219,7 @@ if __name__ == "__main__":
         plt.ylabel("y_strain [uɛ]")
 
         # ================================================================== #
-        # 绘制应变片数据，figure(3)
+        # 绘制应变片数据
         # ================================================================== #
         show_strain = 1
         if show_strain:
@@ -238,6 +238,9 @@ if __name__ == "__main__":
         plt.show()
 
     else:
+    # ================================================================== #
+    # 绘制随时间变化的 应变片和LDV的对比数据
+    # ================================================================== #
         ldv_strain = []
         for data_t in range(dis_data_mm.shape[0]):
             dis_data_one = dis_data_mm[data_t, 1:101]
