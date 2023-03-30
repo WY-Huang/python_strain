@@ -1,5 +1,5 @@
 """
-平板结构单行测点的弯曲应变计算，采用Savitzky-Golay滤波算法或全局最小二乘法
+平板结构单行测点的弯曲应变计算，采用Savitzky-Golay滤波算法或全局最小二乘法（1D）
 
 """
 
@@ -29,7 +29,7 @@ def read_data(data_path=None, sample_num=25, plate_length=96):
 def func_fit(x, dis, M=3):
     """
     方法一：最小二乘法、多项式拟合单行位移数据，曲线过于平滑，会丢失局部特征，误差随阶次增加。
-
+         多项式次数从3到M，返回拟合误差最小的拟合系数及方程。
     param:
         x: x方向坐标（mm）
         dis: 面外位移z（mm）
