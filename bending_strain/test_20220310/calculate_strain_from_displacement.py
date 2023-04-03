@@ -261,7 +261,7 @@ if __name__ == "__main__":
             co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_data_filter, 5)   # 单行全部位移数据最小二乘拟合
             first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
 
-            ldv_strain.append(strain_lstsq[50])
+            ldv_strain.append(strain_lstsq[51])
 
         show_strain = 1
         if show_strain:
@@ -272,7 +272,7 @@ if __name__ == "__main__":
             # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
             plt.figure("LDV vs Strain_Gage")
-            plt.plot(strain_gage[:, 0], strain_gage_value[:, 50], 'b', label="strain_gage", marker='.')  # , marker='.'
+            plt.plot(strain_gage[:, 0], strain_gage_value[:, 51], 'b', label="strain_gage", marker='.')  # , marker='.'
             plt.plot(strain_gage[:, 0], ldv_strain, 'r', label="LDV_mean_strain", marker='^')
             plt.legend()
             plt.xlabel("x_time [s]")

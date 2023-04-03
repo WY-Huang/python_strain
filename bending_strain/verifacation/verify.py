@@ -70,14 +70,21 @@ if __name__ == "__main__":
     y_p = raw_data[:, 1]
     y = (220 - y_p) * pixel_y / 1e3
 
-    # plt.plot(x, y, 'y', lw=2.0, label="dis_raw")
+    plt.figure("Displacement")
+    plt.plot(x, y, 'y', lw=2.0, label="dis_raw")
+    plt.xlabel("x_position [mm]")
+    plt.ylabel("y_displacement [mm]")
 
     co_w, func, y_estimate_lstsq = func_fit(x, y, M=6)   # 单行全部位移数据最小二乘拟合
     first_deri, second_deri, strain_lstsq = strain_calc(x, func, 5)
 
+    plt.figure("Strain")
     # plt.plot(x, y_estimate_lstsq, 'r', lw=2.0, label="dis_lstsq")
     # plt.plot(x, first_deri, 'k', lw=2.0, label="first_deri")
     plt.plot(x, strain_lstsq, 'b', lw=2.0, label="strain_lstsq")
+
+    plt.xlabel("x_position [mm]")
+    plt.ylabel("y_strain [uɛ]")
 
     plt.legend()
     plt.show()
