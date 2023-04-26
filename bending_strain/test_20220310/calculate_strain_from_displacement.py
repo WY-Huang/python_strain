@@ -82,6 +82,8 @@ def strain_calc(x, func_dis, palte_thick):
     first_deri = []
     func_2_deri = np.polyder(func_dis, 2)
     second_deri = []
+
+
     for _, x_value in enumerate(x):
         first_value = func_1_deri(x_value)
         first_deri.append(first_value)
@@ -149,29 +151,30 @@ if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
     merge = 0
     if merge:
-        data_merge("/home/wanyel/vs_code/python_strain/bending_strain/20230424/low_filter_10hz_time/", 
-                "/home/wanyel/vs_code/python_strain/bending_strain/20230424/low_filter_10hz_time/dis_merge_20230424.txt", 
-                126,
+        data_merge("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/time_filter/", 
+                "/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/dis_merge_20230426.txt", 
+                121,
                 merge_type="Vib")
 
     # 读取数据
-    plate_length = 70.0      # 单行测点实际总长度（mm），实际长度46.2mm
+    plate_length = 10.0      # 单行测点实际总长度（mm），实际长度46.2mm
     plate_thickness = 3   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
-    sample_num = 21         # 单行测点数量
-    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/20230424/low_filter_10hz_time/dis_merge_20230424.txt', sample_num, plate_length)
+    sample_num = 11         # 单行测点数量
+    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/dis_merge_20230426.txt', sample_num, plate_length)
 
     # 去除积分导致的每个点的第一个为0的数据
     # x_coor = x_coor[1:]
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
 
     # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
-    only_one = 1
+    only_one = 0
     if only_one:
         dis_data_candidate = dis_data_mm[:15, 0]
         max_dis_index = np.unravel_index(dis_data_candidate.argmax(), dis_data_candidate.shape)   # 最大值索引
         print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
-        dis_data_one = dis_data_mm[max_dis_index[0], 0:126:6]
+        dis_data_one = dis_data_mm[max_dis_index[0], 5:121:11]
         # dis_data_one = dis_data_mm[only_one, 1:101] # 0-31-62-93-124-155
+        print("dis_data_one: ", dis_data_one.shape)
 
         # 滤波处理
         # dis_data_filter = np_move_avg(dis_data_one, 11)     # 1）滑动平均
@@ -183,7 +186,7 @@ if __name__ == "__main__":
         if win_size <= 11:
             win_size = 11
 
-        dis_sg, sid_sg_deri = sg_filter(dis_data_one, win_size, 2, 2, interval_delta) # 2）绘制sg滤波后的数据及2阶导数
+        dis_sg, sid_sg_deri = sg_filter(dis_data_one, win_size, 3, 2, interval_delta) # 2）绘制sg滤波后的数据及2阶导数
 
         dis_data_filter = np_move_avg(dis_sg, 11)     # 1）滑动平均
 
@@ -206,13 +209,13 @@ if __name__ == "__main__":
         # 绘制一/二阶导数曲线及应变曲线，应变片范围点号40-64
         # ================================================================== #
         first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
-        strain_sg = sid_sg_deri * plate_thickness * 1e6
+        strain_sg = sid_sg_deri * plate_thickness * 0.5 * (-1) * 1e6
 
         plt.figure("Strain")
         # plt.plot(x_coor, first_deri, 'b', lw=2.0, label="first_deri")
         # plt.plot(x_coor, np.array(second_deri) * 1e6, 'g', lw=2.0, label="second_deri")
         plt.plot(x_coor, strain_lstsq, 'ro', lw=2.0, label="strain_lstsq")
-        # plt.plot(x_coor, strain_sg, 'y', lw=2.0, label="strain_sg")
+        plt.plot(x_coor, strain_sg, 'y', lw=2.0, label="strain_sg")
         plt.plot(x_coor, np.zeros_like(x_coor), 'b', label="y = 0")
         plt.legend()
         plt.xlabel("x_coordinate [mm]")
@@ -223,13 +226,14 @@ if __name__ == "__main__":
         # ================================================================== #
         show_strain = 1
         if show_strain:
-            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/20230424/30min-320hz.txt")
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/strain_gage_1.txt")
 
             strain_gage_value = strain_gage[:, 1] * (-1) * 1e6
             # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
             plt.figure("LDV vs Strain_Gage")
             plt.plot(strain_gage[:, 0], strain_gage_value[:], 'b', label="strain_gage")  # , marker='.' 'bo'
+            plt.axhline(y=np.mean(strain_lstsq), color='r', label="LDV_mean_strain")
             # plt.plot(1, strain_lstsq[50], 'r', label="LDV_mean_strain", marker='^')
             plt.legend()
             plt.xlabel("x_time [s]")
@@ -241,9 +245,10 @@ if __name__ == "__main__":
     # ================================================================== #
     # 绘制随时间变化的 应变片和LDV的对比数据
     # ================================================================== #
+        show_data_point = 500
         ldv_strain = []
-        for data_t in range(dis_data_mm.shape[0]):
-            dis_data_one = dis_data_mm[data_t, 1:101]
+        for data_t in range(show_data_point):  # dis_data_mm.shape[0]
+            dis_data_one = dis_data_mm[data_t, 5:121:11]
 
             # 滤波处理
             # dis_data_filter = np_move_avg(dis_data_one, 11)     # 1）滑动平均
@@ -261,19 +266,24 @@ if __name__ == "__main__":
             co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_data_filter, 5)   # 单行全部位移数据最小二乘拟合
             first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
 
-            ldv_strain.append(strain_lstsq[51])
+            ldv_strain.append(np.mean(strain_lstsq))
+        
+        ldv_strain_x = np.linspace(0, 1, len(ldv_strain))
 
         show_strain = 1
         if show_strain:
-            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt")
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/strain_gage_2.txt")
 
-            strain_gage_value = strain_gage[:, 1:]
-            strain_gage_value = strain_gage_value / 2e5 * 4 * 1e6 / 10 / 2.08
+            strain_gage_value = strain_gage[:show_data_point, 1]
+            strain_gage_value = strain_gage_value * 1e6
+            strain_gage_x = np.linspace(0, 1, show_data_point)
+            # strain_gage_max = strain_gage_value.max()
+            # strain_gage_value = strain_gage_value / 2e5 * 4 * 1e6 / 10 / 2.08
             # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
             plt.figure("LDV vs Strain_Gage")
-            plt.plot(strain_gage[:, 0], strain_gage_value[:, 51], 'b', label="strain_gage", marker='.')  # , marker='.'
-            plt.plot(strain_gage[:, 0], ldv_strain, 'r', label="LDV_mean_strain", marker='^')
+            plt.plot(strain_gage_x, strain_gage_value, 'b', label="strain_gage")  # , marker='.'
+            plt.plot(ldv_strain_x, ldv_strain, 'r', label="LDV_mean_strain")      # , marker='^'
             plt.legend()
             plt.xlabel("x_time [s]")
             plt.ylabel("y_strain [uɛ]")
