@@ -149,29 +149,29 @@ if __name__ == "__main__":
     # 整合数据并保存到test_2022/dis_data_all.txt
     merge = 0
     if merge:
-        data_merge("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/", 
-                "/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt", 
-                303,
-                merge_type="Ref")
+        data_merge("/home/wanyel/vs_code/python_strain/bending_strain/20230424/low_filter_10hz_time/", 
+                "/home/wanyel/vs_code/python_strain/bending_strain/20230424/low_filter_10hz_time/dis_merge_20230424.txt", 
+                126,
+                merge_type="Vib")
 
     # 读取数据
-    plate_length = 40.0      # 单行测点实际总长度（mm），实际长度46.2mm
-    plate_thickness = 3.42   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
-    sample_num = 101         # 单行测点数量
-    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/dis_merge_20230326_1.txt', sample_num, plate_length)
+    plate_length = 70.0      # 单行测点实际总长度（mm），实际长度46.2mm
+    plate_thickness = 3   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
+    sample_num = 21         # 单行测点数量
+    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/20230424/low_filter_10hz_time/dis_merge_20230424.txt', sample_num, plate_length)
 
     # 去除积分导致的每个点的第一个为0的数据
-    x_coor = x_coor[1:]
+    # x_coor = x_coor[1:]
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
 
     # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
-    only_one = 0
+    only_one = 1
     if only_one:
-
-        # max_dis_index = np.unravel_index(dis_data_mm.argmax(), dis_data_mm.shape)   # 最大值索引
-        # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
-        # dis_data_one = dis_data_mm[max_dis_index[0], 1:31]
-        dis_data_one = dis_data_mm[only_one, 1:101] # 0-31-62-93-124-155
+        dis_data_candidate = dis_data_mm[:15, 0]
+        max_dis_index = np.unravel_index(dis_data_candidate.argmax(), dis_data_candidate.shape)   # 最大值索引
+        print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
+        dis_data_one = dis_data_mm[max_dis_index[0], 0:126:6]
+        # dis_data_one = dis_data_mm[only_one, 1:101] # 0-31-62-93-124-155
 
         # 滤波处理
         # dis_data_filter = np_move_avg(dis_data_one, 11)     # 1）滑动平均
@@ -223,14 +223,14 @@ if __name__ == "__main__":
         # ================================================================== #
         show_strain = 1
         if show_strain:
-            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/export_0326_1Vpp/strain_merge_20230326_1.txt")
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/20230424/30min-320hz.txt")
 
-            strain_gage_value = strain_gage[:, 1:] * (-1)
+            strain_gage_value = strain_gage[:, 1] * (-1) * 1e6
             # LDV_mean_strain = np.sum(strain_sg[12:20]) / 8
 
             plt.figure("LDV vs Strain_Gage")
-            plt.plot(strain_gage[only_one, 0], strain_gage_value[only_one, 50], 'bo', label="strain_gage")  # , marker='.'
-            plt.plot(1, strain_lstsq[50], 'r', label="LDV_mean_strain", marker='^')
+            plt.plot(strain_gage[:, 0], strain_gage_value[:], 'b', label="strain_gage")  # , marker='.' 'bo'
+            # plt.plot(1, strain_lstsq[50], 'r', label="LDV_mean_strain", marker='^')
             plt.legend()
             plt.xlabel("x_time [s]")
             plt.ylabel("y_strain [uɛ]")
