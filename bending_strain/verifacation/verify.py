@@ -1,3 +1,8 @@
+"""
+Julight一维/二维应变数据验证
+"""
+
+
 import numpy as np
 import matplotlib.pylab as plt
 
