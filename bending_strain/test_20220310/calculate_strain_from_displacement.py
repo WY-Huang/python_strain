@@ -157,22 +157,22 @@ if __name__ == "__main__":
                 merge_type="Vib")
 
     # 读取数据
-    plate_length = 10.0      # 单行测点实际总长度（mm），实际长度46.2mm
+    plate_length = 70.0      # 单行测点实际总长度（mm），实际长度46.2mm
     plate_thickness = 3   # 板的中性面到表面的厚度（mm），实际厚度3.42mm
-    sample_num = 11         # 单行测点数量
-    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/dis_merge_20230426.txt', sample_num, plate_length)
+    sample_num = 31         # 单行测点数量
+    x_coor, dis_data_mm = read_data('/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/time_filter/dis_merge_20230425.txt', sample_num, plate_length)
 
     # 去除积分导致的每个点的第一个为0的数据
     # x_coor = x_coor[1:]
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
 
     # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
-    only_one = 0
+    only_one = 1
     if only_one:
         dis_data_candidate = dis_data_mm[:15, 0]
         max_dis_index = np.unravel_index(dis_data_candidate.argmax(), dis_data_candidate.shape)   # 最大值索引
         print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
-        dis_data_one = dis_data_mm[max_dis_index[0], 5:121:11]
+        dis_data_one = dis_data_mm[max_dis_index[0], 3:186:6]
         # dis_data_one = dis_data_mm[only_one, 1:101] # 0-31-62-93-124-155
         print("dis_data_one: ", dis_data_one.shape)
 
@@ -224,7 +224,7 @@ if __name__ == "__main__":
         # ================================================================== #
         # 绘制应变片数据
         # ================================================================== #
-        show_strain = 1
+        show_strain = 0
         if show_strain:
             strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/strain_gage_1.txt")
 

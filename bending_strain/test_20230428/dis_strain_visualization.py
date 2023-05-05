@@ -26,10 +26,12 @@ def visualization_3d(xc, yc, zc, xraw=None, yraw=None, zraw=[],
     # plt.ion()
 
     xs, ys = xc, yc
-    for idx in range(len(times)):
+    # for idx in range(len(times)):
+    for idx in range(1):
         title = f"Num.{idx} Time:[{times[idx]:f} s]"
-        zs = zc[idx]
+        # zs = zc[idx]
         # zraw_i = zraw[idx]
+        zs = zc.reshape((1, -1))[0]
 
         ax_3d.cla()
         # Plot a trisurf
@@ -61,15 +63,15 @@ def visualization_3d(xc, yc, zc, xraw=None, yraw=None, zraw=[],
 
         ax_3d.set_xlabel('X Position [mm]')
         ax_3d.set_ylabel('Y Position [mm]')
-        ax_3d.set_zlabel(z_label)
+        ax_3d.set_zlabel(z_label, labelpad=10)
         ax_3d.set_box_aspect([fig_y * x_y_ratio, fig_y, fig_y])
         # ax_3d.set_zlim(-1, 2)
-        # plt.colorbar(fig_tri)
+        plt.colorbar(fig_tri)
         # cax.clear()
         # plt.colorbar(fig_tri, cax=cax)
 
         # plt.show()
-        plt.pause(0.1)
+        plt.pause(0.5)
 
 
 def get_x_y_real(x_c, y_c):
@@ -77,7 +79,7 @@ def get_x_y_real(x_c, y_c):
     获取真实的xyz值
     """
     x_c_r = (x_c - x_c.min()) / (x_c.max() - x_c.min()) * 40
-    y_c_r = (y_c - y_c.min()) / (y_c.max() - y_c.min()) * 10
+    y_c_r = (y_c - y_c.min()) / (y_c.max() - y_c.min()) * 70
 
     return x_c_r, y_c_r
 
@@ -188,14 +190,14 @@ if __name__ == "__main__":
     # （1）原始位移及坐标数据读取显示
     # ================================================================================
     # 初始数据
-    plate_length = 10.0     # 单行测点实际总长度（mm），实际长度46.2mm
+    plate_length = 70.0     # 单行测点实际总长度（mm），实际长度46.2mm
     plate_thickness = 3     # 板的中性面到表面的厚度（mm），实际厚度3.42mm
-    sample_num = 11         # 单行测点数量
-    column = 11              # 需拟合的列数
+    sample_num = 31         # 单行测点数量
+    column = 6              # 需拟合的列数
     point_all = sample_num * column
 
     # 读取原始坐标点(x, y)数据
-    coor_data = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/point.txt")  # bending_strain/
+    coor_data = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/time_filter/point.txt")  # bending_strain/
     x_coor, y_coor = coor_data[:, 1], coor_data[:, 2]
     print("x_coor size: ", x_coor.shape, "\ny_coor size: ", y_coor.shape)
 
@@ -205,13 +207,13 @@ if __name__ == "__main__":
     y_coor_real = y_real.reshape((-1, 1))
     xy_save = False
     if xy_save:
-        x_coor_temp = np.zeros((11, 11))
-        y_coor_temp = np.zeros((11, 11))
+        x_coor_temp = np.zeros((column, sample_num))
+        y_coor_temp = np.zeros((column, sample_num))
         for idx in range(column):
             x_coor_temp[idx] = x_real[idx:point_all:column]
             y_coor_temp[idx] = y_real[idx:point_all:column]
         xy_coor_real = np.hstack((x_coor_temp.reshape((-1, 1)), y_coor_temp.reshape((-1, 1))))
-        np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/xy_coor_real.txt", xy_coor_real)
+        np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/xy_coor_real.txt", xy_coor_real)
         print("xy_coor_deleted shape: ", xy_coor_real.shape)
 
     fig_y = 2
@@ -219,7 +221,7 @@ if __name__ == "__main__":
     figsize = (fig_y * x_y_ratio, fig_y)
 
     # 读取所有原始坐标点的随时间变化的位移数据
-    dis_data = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/dis_merge_20230426.txt")
+    dis_data = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/time_filter/dis_merge_20230425.txt")
     data_shape = dis_data.shape
     dis_data_pure = dis_data[:, 1:]
     print("Out of plate displacement data size: ", data_shape)
@@ -254,12 +256,12 @@ if __name__ == "__main__":
 
     local_load = 1
     if local_load:
-        xy_coor_re_arr = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/xy_coor_real.txt")
+        xy_coor_re_arr = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/xy_coor_real.txt")
         x_coor_d, y_coor_d = xy_coor_re_arr[:, 0], xy_coor_re_arr[:, 1]
 
-        dis_fit_lstsq_all = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/y_estimate_lstsq_all.txt")
+        y_estimate_lstsq_all = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/y_estimate_lstsq_185.txt")
         # dis_fit_sg_all = np.loadtxt("bending_strain/test_2022/dis_fit_sg.txt")
-        strain_lstsq_all = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/strain_lstsq_all.txt")
+        strain_lstsq_all = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/strain_lstsq_185_copy.txt")
         # second_deri_sg_all = np.loadtxt("bending_strain/test_2022/strain_lstsq.txt")
     else:
 
@@ -297,16 +299,19 @@ if __name__ == "__main__":
                 y_estimate_lstsq_one[col_i] = y_estimate_lstsq
                 strain_lstsq_one[col_i] = strain_lstsq
 
+            # np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/y_estimate_lstsq_185.txt", y_estimate_lstsq_one)
+            # np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/strain_lstsq_185.txt", strain_lstsq_one)
+
             y_estimate_lstsq_all[row_i] = y_estimate_lstsq_one.reshape((1,-1))
-            strain_lstsq_all[row_i] = y_estimate_lstsq_one.reshape((1,-1))
+            strain_lstsq_all[row_i] = strain_lstsq_one.reshape((1,-1))
             row_i += 1
 
         # 保存拟合后的位移数据及应变数据
         save_flag = 1
         if save_flag:
 
-            np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/y_estimate_lstsq_all.txt", y_estimate_lstsq_all)
-            np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/test_20230428/data/strain_lstsq_all.txt", strain_lstsq_all)
+            np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/y_estimate_lstsq_all.txt", y_estimate_lstsq_all)
+            np.savetxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230425/strain_lstsq_all.txt", strain_lstsq_all)
 
     # 绘制拟合后的位移的散点图、应变图（三维显示）
     show_dynamic_dis_fit = 1
@@ -315,6 +320,10 @@ if __name__ == "__main__":
 
         # method 1
         # visualization_3d(x_coor_d, y_coor_d, dis_fit_lstsq_all, x_coor, y_coor, dis_data_pure, "scatter", dis_time)
-        # visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, "trisurf", dis_time, z_label="Strain [uɛ]")
-        visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, flag="scatter", times=dis_time)
+        
+        # visualization_3d(x_coor_d, y_coor_d, y_estimate_lstsq_all, flag="trisurf", times=dis_time)
+        # visualization_3d(x_coor_d, y_coor_d, strain_lstsq_all, flag="trisurf", times=dis_time, z_label="Strain [uɛ]")
+
+        stress_lstsq_all = strain_lstsq_all * 71 * 1e-3     # 单位Mpa
+        visualization_3d(x_coor_d, y_coor_d, stress_lstsq_all, flag="trisurf", times=dis_time, z_label="Stress [Mpa]")
         plt.show()
