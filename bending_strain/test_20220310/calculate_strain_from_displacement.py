@@ -169,10 +169,11 @@ if __name__ == "__main__":
     # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
     only_one = 1
     if only_one:
-        dis_data_candidate = dis_data_mm[:15, 0]
+        dis_data_candidate = dis_data_mm[:100, 1]   # 搜索区间
         max_dis_index = np.unravel_index(dis_data_candidate.argmax(), dis_data_candidate.shape)   # 最大值索引
+        print("最大位移的位置索引：", max_dis_index[0])
         # print("最大位移的位置索引及值：", max_dis_index, "\t", dis_data_mm[max_dis_index])
-        dis_data_one = dis_data_mm[max_dis_index[0], 5:66:6]
+        dis_data_one = dis_data_mm[max_dis_index[0], 4:66:6]
         # dis_data_one = dis_data_mm[only_one, 1:101] # 0-31-62-93-124-155
         print("dis_data_one: ", dis_data_one.shape)
 
@@ -193,7 +194,7 @@ if __name__ == "__main__":
         # ================================================================== #
         # 绘制原始位移散点及拟合后的位移曲线
         # ================================================================== #
-        co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_sg, 3)   # 单行全部位移数据最小二乘拟合
+        co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_sg, 4)   # 单行全部位移数据最小二乘拟合
         # print("resl_lists: ", resl_lists)
 
         plt.figure("Displacement")
@@ -233,7 +234,7 @@ if __name__ == "__main__":
 
             plt.figure("LDV vs Strain_Gage")
             plt.plot(strain_gage[:, 0], strain_gage_value[:], 'b', label="strain_gage")  # , marker='.' 'bo'
-            plt.axhline(y=np.mean(strain_lstsq[4:6]), color='r', label="LDV_mean_strain")
+            plt.axhline(y=np.mean(strain_lstsq[5:8]), color='r', label="LDV_mean_strain")
             # plt.plot(1, strain_lstsq[50], 'r', label="LDV_mean_strain", marker='^')
             plt.legend()
             plt.xlabel("x_time [s]")
