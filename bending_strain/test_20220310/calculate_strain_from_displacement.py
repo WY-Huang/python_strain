@@ -167,7 +167,7 @@ if __name__ == "__main__":
     print("x_coor:", x_coor.shape, "\ndis_data_mm:", dis_data_mm.shape)
 
     # 仅绘制第 only_one 行的数据，否则绘制随时间变化的全部数据
-    only_one = 1
+    only_one = 0
     if only_one:
         dis_data_candidate = dis_data_mm[:100, 1]   # 搜索区间
         max_dis_index = np.unravel_index(dis_data_candidate.argmax(), dis_data_candidate.shape)   # 最大值索引
@@ -246,10 +246,10 @@ if __name__ == "__main__":
     # ================================================================== #
     # 绘制随时间变化的 应变片和LDV的对比数据
     # ================================================================== #
-        show_data_point = 500
+        show_data_point = 300
         ldv_strain = []
         for data_t in range(show_data_point):  # dis_data_mm.shape[0]
-            dis_data_one = dis_data_mm[data_t, 5:121:11]
+            dis_data_one = dis_data_mm[data_t, 4:66:6]
 
             # 滤波处理
             # dis_data_filter = np_move_avg(dis_data_one, 11)     # 1）滑动平均
@@ -258,25 +258,25 @@ if __name__ == "__main__":
             win_size = sample_num // 5                          # 滑动窗口选取为测点数的1/5，且为奇数
             if win_size % 2 == 0:
                 win_size += 1
-            if win_size <= 11:
-                win_size = 11
+            if win_size <= 9:
+                win_size = 9
 
             dis_sg, sid_sg_deri = sg_filter(dis_data_one, win_size, 3, 2, interval_delta) # 2）绘制sg滤波后的数据及2阶导数
-            dis_data_filter = np_move_avg(dis_sg, 11)     # 1）滑动平均
+            # dis_data_filter = np_move_avg(dis_sg, win_size)     # 1）滑动平均
 
-            co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_data_filter, 5)   # 单行全部位移数据最小二乘拟合
+            co_w, func, y_estimate_lstsq, resl_lists = func_fit(x_coor, dis_sg, 5)   # 单行全部位移数据最小二乘拟合
             first_deri, second_deri, strain_lstsq = strain_calc(x_coor, func, plate_thickness)
 
-            ldv_strain.append(np.mean(strain_lstsq))
+            ldv_strain.append(np.mean(strain_lstsq[4:7]))
         
         ldv_strain_x = np.linspace(0, 1, len(ldv_strain))
 
         show_strain = 1
         if show_strain:
-            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230426/strain_gage_2.txt")
+            strain_gage = np.loadtxt("/home/wanyel/vs_code/python_strain/bending_strain/data_test/20230518/2_strain_gage_beam.txt")
 
             strain_gage_value = strain_gage[:show_data_point, 1]
-            strain_gage_value = strain_gage_value * 1e6
+            strain_gage_value = strain_gage_value * 1e6 * 3
             strain_gage_x = np.linspace(0, 1, show_data_point)
             # strain_gage_max = strain_gage_value.max()
             # strain_gage_value = strain_gage_value / 2e5 * 4 * 1e6 / 10 / 2.08
