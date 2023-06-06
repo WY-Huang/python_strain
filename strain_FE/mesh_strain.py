@@ -5,7 +5,7 @@ from matplotlib.patches import Polygon
 
 def node_displacement(node_num):
     """
-    生成节点位移x（0-10um）,y(0-20um)
+    生成节点位移x（0-10um）, y(0-20um)
     """
     node_disp = np.zeros([node_num, 2])
     # x_coor = np.linspace(0., 0.01, node_num)
@@ -136,9 +136,9 @@ def strain_compute(node_coor, node_displace):
     # print(f"Ex = {strain_conp[0]}\nEy = {strain_conp[1]}\nRxy = {strain_conp[2]}")
     return strain_conp
 
-def draw_mesh(flag, color_value_x=None):
+def draw_mesh(flag, title, color_value_x=None):
     if flag == "init_mesh":
-        plt.figure(1)
+        plt.figure(title)
         count = 1
         # plot nodes num
         for i in range(numN):
@@ -182,7 +182,7 @@ def draw_mesh(flag, color_value_x=None):
         plt.axis("equal")
 
     elif flag == "strain_mesh":
-        fig = plt.figure(2)
+        fig = plt.figure(title)
         sub = fig.add_subplot(111)
         x = np.squeeze(NC[:, 0])
         y = np.squeeze(NC[:, 1])
@@ -205,7 +205,7 @@ def draw_mesh(flag, color_value_x=None):
         plt.triplot(triang, 'go-')
         # cbar = fig.colorbar(sub)
 
-    plt.show()
+    # plt.show()
 
 '''
 def calculate_strain(displacements, coordinates, elements):
@@ -254,16 +254,16 @@ def normalization(color_value):
 
 if __name__ == "__main__":
     # 网格参数
-    x, y = 1, 1
-    nx = 5
-    ny = 4
+    x, y = 10, 5
+    nx = 20
+    ny = 10
     element_type = 'TR'
     NC, EI = creat_mesh(x, y, nx, ny, element_type)
     numN = np.size(NC, 0)
     numE = np.size(EI, 0)
 
     # 可视化网格
-    draw_mesh("init_mesh")
+    draw_mesh("init_mesh", "mesh generate")
 
     node_disp_all = node_displacement(numN)
 
@@ -296,8 +296,8 @@ if __name__ == "__main__":
     color_value_xy = strain_conp_all[:, 2, 0]
     color_value_xy = normalization(color_value_xy)
 
-    draw_mesh("strain_mesh", color_value_x)
-    draw_mesh("strain_mesh", color_value_y)
-    draw_mesh("strain_mesh", color_value_xy)
+    draw_mesh("strain_mesh", "strain x", color_value_x)
+    draw_mesh("strain_mesh", "strain y", color_value_y)
+    draw_mesh("strain_mesh", "strain xy", color_value_xy)
 
     plt.show()
