@@ -158,10 +158,10 @@ def draw_mesh(flag, title, color_value_x=None):
                 x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
                 x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
                 x3, y3 = NC[EI[i, 3] - 1, 0], NC[EI[i, 3] - 1, 1]
-                plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
-                plt.plot([x0, x3], [y0, y3], c='red', linewidth=3)
-                plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
-                plt.plot([x2, x3], [y2, y3], c='red', linewidth=3)
+                plt.plot([x0, x1], [y0, y1], c='red', linewidth=2)
+                plt.plot([x0, x3], [y0, y3], c='red', linewidth=2)
+                plt.plot([x1, x2], [y1, y2], c='red', linewidth=2)
+                plt.plot([x2, x3], [y2, y3], c='red', linewidth=2)
 
         if element_type == 'TR':
             count2 = 1
@@ -174,12 +174,12 @@ def draw_mesh(flag, title, color_value_x=None):
                 x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
                 x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
                 x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-                plt.plot([x0, x1], [y0, y1], c='red', linewidth=3)
-                plt.plot([x1, x2], [y1, y2], c='red', linewidth=3)
-                plt.plot([x0, x2], [y0, y2], c='red', linewidth=3)
+                plt.plot([x0, x1], [y0, y1], c='red', linewidth=2)
+                plt.plot([x1, x2], [y1, y2], c='red', linewidth=2)
+                plt.plot([x0, x2], [y0, y2], c='red', linewidth=2)
         # plt.xlim(0, x)
         # plt.ylim(0, y)
-        plt.axis("equal")
+        plt.axis("tight")   # equal
 
     elif flag == "strain_mesh":
         fig = plt.figure(title)
@@ -255,8 +255,8 @@ def normalization(color_value):
 if __name__ == "__main__":
     # 网格参数
     x, y = 10, 5
-    nx = 20
-    ny = 10
+    nx = 10
+    ny = 5
     element_type = 'TR'
     NC, EI = creat_mesh(x, y, nx, ny, element_type)
     numN = np.size(NC, 0)
