@@ -20,10 +20,10 @@ z_d = Z + random_array
 
 # ax3d = plt.axes(projection='3d')
 # ax3d.plot_surface(X, Y, Z)  # , cmap='plasma'
-ax3d.plot_trisurf(X.ravel(), Y.ravel(), Z.ravel(), edgecolor="r", alpha=0.2)  # , cmap='gist_rainbow_r'
-ax3d.scatter3D(X.reshape(-1), Y.reshape(-1), Z.reshape(-1), marker='o', s=30, color='b')
+# ax3d.plot_trisurf(X.ravel(), Y.ravel(), Z.ravel(), edgecolor="r", alpha=0.2)  # , cmap='gist_rainbow_r'
+# ax3d.scatter3D(X.reshape(-1), Y.reshape(-1), Z.reshape(-1), marker='o', s=30, color='b')
 ax3d.plot_trisurf(x_d.ravel(), y_d.ravel(), z_d.ravel(), facecolor="yellow", edgecolor="green", alpha=0.2)
-
+ax3d.scatter3D(x_d.reshape(-1), y_d.reshape(-1), z_d.reshape(-1), marker='o', s=30, color='b')
 # ax3d.set_title('Surface Plot in Matplotlib')
 ax3d.set_xlabel('X')
 ax3d.set_ylabel('Y')
