@@ -121,8 +121,8 @@ def strain_compute(node_coor, node_displace):
 
     # 应变矩阵B
     B_mat = np.matrix([[b1, 0, b2, 0, b3, 0],
-                    [0, c1, 0, c2, 0, c3],
-                    [c1, b1, c2, b2, c3, b3]])
+                       [0, c1, 0, c2, 0, c3],
+                       [c1, b1, c2, b2, c3, b3]])
 
     B = (1 / (2 * A)) * B_mat
 
@@ -202,7 +202,7 @@ def draw_mesh(flag, title, color_value_x=None):
 
 
         # plt.tricontourf(triang, np.zeros_like(x))
-        plt.triplot(triang, 'go-')
+        plt.triplot(triang) # , 'go-'
         # cbar = fig.colorbar(sub)
 
     # plt.show()
