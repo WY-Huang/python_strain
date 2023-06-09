@@ -11,8 +11,11 @@ def node_displacement(node_num):
     # x_coor = np.linspace(0., 0.01, node_num)
     # y_coor = np.linspace(0., 0.02, node_num)
 
-    x_coor = np.random.random(node_num) / 100
-    y_coor = np.random.random(node_num) / 50
+    # x_coor = np.random.random(node_num) / 100
+    # y_coor = np.random.random(node_num) / 50
+
+    x_coor = np.random.randn(node_num) / 100
+    y_coor = np.random.randn(node_num) / 50
 
     for i in range(node_num):
         node_disp[i][0] = x_coor[i]
@@ -254,9 +257,9 @@ def normalization(color_value):
 
 if __name__ == "__main__":
     # 网格参数
-    x, y = 10, 5
+    x, y = 5, 10
     nx = 10
-    ny = 5
+    ny = 10
     element_type = 'TR'
     NC, EI = creat_mesh(x, y, nx, ny, element_type)
     numN = np.size(NC, 0)
