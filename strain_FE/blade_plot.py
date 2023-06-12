@@ -42,7 +42,6 @@ def strain_compute(node_coor, node_displace):
     """
     根据节点坐标和位移计算应变
     """
-
     # 三个节点坐标
     x1 = node_coor[0][0]
     y1 = node_coor[0][1]
@@ -96,14 +95,14 @@ def test_CalNormal3D():
     nx, ny, nz = CalNormal3D(p1, p2, p3)
     print("nx, ny, nz:\n", nx, ny, nz)
 
-    # 新坐标
+    # 局部坐标系下新坐标
     rotate_arr = calCosine(nx, ny, nz)
     p1New = np.matmul(rotate_arr, p1)
     p2New = np.matmul(rotate_arr, p2)
     p3New = np.matmul(rotate_arr, p3)
     print("p1New, p2New, p3New:\n", p1New, p2New, p3New)
 
-    # 新位移
+    # 局部坐标系下新位移
     random_array = np.random.randn(3) / 20
     d1New = np.matmul(rotate_arr, random_array)
     d2New = np.matmul(rotate_arr, random_array)
@@ -113,10 +112,17 @@ def test_CalNormal3D():
     v1y = np.dot(d1New, [0, 1, 0])
 
     nodeCoorNew = np.array([p1New, p2New, p3New])   # 新坐标及位移
-    disNew = np.array([u1x, v1y, u1x+0.01, v1y+0.01, u1x, v1y])
+    disNew = np.array([u1x, v1y, u1x+0.01, v1y+0.01, u1x+0.02, v1y+0.02])
 
-    strainCon = strain_compute(nodeCoorNew, disNew) # 应变计算
+    strainCon = strain_compute(nodeCoorNew, disNew) # 局部应变计算
     print("strainCon:\n", strainCon)
+
+    strainLocal = strainCon
+    strainLocal[2] = 0
+    R_inv = np.linalg.inv(rotate_arr)   # 局部到全局的变换矩阵R_inv
+    strainConGlobal = np.matmul(R_inv, strainLocal)
+    strainConGlobal[2] = strainConGlobal[0] + strainConGlobal[1]
+    print("strainConGlobal:\n", strainConGlobal)
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -134,9 +140,9 @@ def test_CalNormal3D():
     ax.quiver(0,0,0,ny[0],ny[1],ny[2],length=0.8,arrow_length_ratio=0.1, color="g")
     ax.quiver(0,0,0,nz[0],nz[1],nz[2],length=0.8,arrow_length_ratio=0.1, color="b")
     # 绘制文本
-    ax.text(nx[0], nx[1], nx[2], "X", ha='center', va='center', color="r")
-    ax.text(ny[0], ny[1], ny[2], "Y", ha='center', va='center', color="g")
-    ax.text(nz[0], nz[1], nz[2], "Z", ha='center', va='center', color="b")
+    ax.text(nx[0], nx[1], nx[2], "X\'", ha='center', va='center', color="r")
+    ax.text(ny[0], ny[1], ny[2], "Y\'", ha='center', va='center', color="g")
+    ax.text(nz[0], nz[1], nz[2], "Z\'", ha='center', va='center', color="b")
 
     # ax.set_xlim(0, 2)
     # ax.set_ylim(0, 2)
@@ -194,6 +200,6 @@ def draw_tri_grid():
 
 if __name__ == "__main__":
     # 绘制三角网格图
-    draw_tri_grid()
+    # draw_tri_grid()
 
     test_CalNormal3D()

@@ -182,7 +182,8 @@ def draw_mesh(flag, title, color_value_x=None):
                 plt.plot([x0, x2], [y0, y2], c='red', linewidth=2)
         # plt.xlim(0, x)
         # plt.ylim(0, y)
-        plt.axis("tight")   # equal
+        plt.axis('equal')
+        # plt.axis("tight")   # equal
 
     elif flag == "strain_mesh":
         fig = plt.figure(title)
@@ -203,7 +204,7 @@ def draw_mesh(flag, title, color_value_x=None):
             poly = Polygon(vertices, color=plt.cm.autumn(color_value_x[i]))
             sub.add_patch(poly)
 
-
+        sub.set_aspect('equal')
         # plt.tricontourf(triang, np.zeros_like(x))
         plt.triplot(triang) # , 'go-'
         # cbar = fig.colorbar(sub)
@@ -257,7 +258,7 @@ def normalization(color_value):
 
 if __name__ == "__main__":
     # 网格参数
-    x, y = 5, 10
+    x, y = 10, 5
     nx = 10
     ny = 10
     element_type = 'TR'
@@ -303,4 +304,5 @@ if __name__ == "__main__":
     draw_mesh("strain_mesh", "strain y", color_value_y)
     draw_mesh("strain_mesh", "strain xy", color_value_xy)
 
+    
     plt.show()
