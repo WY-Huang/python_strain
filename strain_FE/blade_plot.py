@@ -18,14 +18,14 @@ def CalNormal3D(point_1, point_2, point_3):
     normal_z = np.array([na, nb, nc])
 
     normal_x = point_2 - point_1
-    normal_y = np.cross(normal_z, normal_x)
+    normal_y = np.cross(normal_z, normal_x) # 叉乘ab，得到垂直于ab的c向量
 
     return normal_x, normal_y, normal_z
 
 
 def calCosine(norm_x, norm_y, norm_z):
     """
-    计算新坐标系与原坐标系的旋转矩阵
+    通过方向余弦，计算新坐标系与原坐标系的旋转矩阵
     """
     norm_arr = np.array([norm_x, norm_y, norm_z])
     rotate_arr = np.empty([3, 3])
@@ -96,11 +96,27 @@ def test_CalNormal3D():
     nx, ny, nz = CalNormal3D(p1, p2, p3)
     print("nx, ny, nz:\n", nx, ny, nz)
 
+    # 新坐标
     rotate_arr = calCosine(nx, ny, nz)
     p1New = np.matmul(rotate_arr, p1)
     p2New = np.matmul(rotate_arr, p2)
     p3New = np.matmul(rotate_arr, p3)
     print("p1New, p2New, p3New:\n", p1New, p2New, p3New)
+
+    # 新位移
+    random_array = np.random.randn(3) / 20
+    d1New = np.matmul(rotate_arr, random_array)
+    d2New = np.matmul(rotate_arr, random_array)
+    d3New = np.matmul(rotate_arr, random_array)
+
+    u1x = np.dot(d1New, [1, 0, 0])   # 新位移在新坐标系xy上的投影
+    v1y = np.dot(d1New, [0, 1, 0])
+
+    nodeCoorNew = np.array([p1New, p2New, p3New])   # 新坐标及位移
+    disNew = np.array([u1x, v1y, u1x+0.01, v1y+0.01, u1x, v1y])
+
+    strainCon = strain_compute(nodeCoorNew, disNew) # 应变计算
+    print("strainCon:\n", strainCon)
 
     fig = plt.figure()
     ax = fig.add_subplot(projection='3d')
@@ -178,6 +194,6 @@ def draw_tri_grid():
 
 if __name__ == "__main__":
     # 绘制三角网格图
-    # draw_tri_grid()
+    draw_tri_grid()
 
     test_CalNormal3D()
