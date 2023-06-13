@@ -38,6 +38,13 @@ def calCosine(norm_x, norm_y, norm_z):
     return rotate_arr
 
 
+def calLocalCoorDis(node1, node2, node3, dis1, dis2, dis3):
+    """
+    根据旋转矩阵（3*3）计算局部坐标系下的节点坐标与位移（3*1）->（3*6）
+    """
+    nodeDisArr = np.array([])
+
+
 def strain_compute(node_coor, node_displace):
     """
     根据节点坐标和位移计算应变
@@ -88,31 +95,37 @@ def test_CalNormal3D():
     """
     测试CalNormal3D的返回向量
     """
-    p1 = np.array([1, 0, 0])
+    p1 = np.array([1, 0, 0])        # 节点坐标
     p2 = np.array([0, 1, 0])
     p3 = np.array([0, 0, 1])
 
-    nx, ny, nz = CalNormal3D(p1, p2, p3)
+    d1 = np.random.randn(3) / 20    # 节点位移
+    d2 = np.random.randn(3) / 20
+    d3 = np.random.randn(3) / 20
+
+    nx, ny, nz = CalNormal3D(p1, p2, p3)    # 计算局部坐标系三个轴向量
     print("nx, ny, nz:\n", nx, ny, nz)
 
-    # 局部坐标系下新坐标
-    rotate_arr = calCosine(nx, ny, nz)
+    rotate_arr = calCosine(nx, ny, nz)      # 局部坐标系下新坐标
     p1New = np.matmul(rotate_arr, p1)
     p2New = np.matmul(rotate_arr, p2)
     p3New = np.matmul(rotate_arr, p3)
     print("p1New, p2New, p3New:\n", p1New, p2New, p3New)
 
-    # 局部坐标系下新位移
-    random_array = np.random.randn(3) / 20
-    d1New = np.matmul(rotate_arr, random_array)
-    d2New = np.matmul(rotate_arr, random_array)
-    d3New = np.matmul(rotate_arr, random_array)
+    d1New = np.matmul(rotate_arr, d1)       # 局部坐标系下新位移
+    d2New = np.matmul(rotate_arr, d2)
+    d3New = np.matmul(rotate_arr, d3)
+    print("d1New, d2New, d3New:\n", d1New, d2New, d3New)
 
-    u1x = np.dot(d1New, [1, 0, 0])   # 新位移在新坐标系xy上的投影
+    u1x = np.dot(d1New, [1, 0, 0])   # 新位移在新坐标系xy平面上的投影
     v1y = np.dot(d1New, [0, 1, 0])
+    u2x = np.dot(d2New, [1, 0, 0])
+    v2y = np.dot(d2New, [0, 1, 0])
+    u3x = np.dot(d3New, [1, 0, 0])
+    v3y = np.dot(d3New, [0, 1, 0])
 
-    nodeCoorNew = np.array([p1New, p2New, p3New])   # 新坐标及位移
-    disNew = np.array([u1x, v1y, u1x+0.01, v1y+0.01, u1x+0.02, v1y+0.02])
+    nodeCoorNew = np.array([p1New, p2New, p3New])   # 局部坐标系下新坐标及位移
+    disNew = np.array([u1x, v1y, u2x, v2y, u3x, v3y])
 
     strainCon = strain_compute(nodeCoorNew, disNew) # 局部应变计算
     print("strainCon:\n", strainCon)
