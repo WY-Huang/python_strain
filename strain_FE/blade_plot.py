@@ -151,6 +151,12 @@ def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, fl
         plt.triplot(triang) # , 'go-'
         # cbar = fig.colorbar(sub)
 
+    ax3d.set_xlabel('X')
+    ax3d.set_ylabel('Y')
+    ax3d.set_zlabel('Z')
+    ax3d.set_box_aspect([5, 10, 2])
+
+    plt.tight_layout()
     plt.show()
 
 
@@ -371,7 +377,7 @@ if __name__ == "__main__":
     """
 
     # 网格参数
-    x, y = 2, 5
+    x, y = 2, 4
     nx = 10
     ny = 10
     element_type = 'TR'
