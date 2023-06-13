@@ -3,6 +3,7 @@ import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
 from matplotlib.patches import Polygon
 
+
 def node_displacement(node_num):
     """
     生成节点位移x（0-10um）, y(0-20um)
@@ -23,6 +24,7 @@ def node_displacement(node_num):
     
     return np.sort(node_disp, axis=0)
 
+
 def creat_mesh(x, y, nx, ny, e_type):
     '''
     生成节点坐标和单元索引
@@ -33,69 +35,62 @@ def creat_mesh(x, y, nx, ny, e_type):
     e_type:SQ表示是矩形单元,TR表示三角单元
 
     '''
-    # 矩形单元的四角坐标
-    q = np.array([[0., 0.], [x, 0.], [0, y], [x, y]])
-    # node的数量
-    numN = (nx + 1) * (ny + 1)
-    # element的数量
-    numE = nx * ny
-    # 矩形element的角
-    NofE = 4
-    # 二维坐标
-    D = 2
-    # nodes 坐标
-    NC = np.zeros([numN, D])
-    # dx,dy的计算
-    dx = q[1, 0] / nx
+    q = np.array([[0., 0.], [x, 0.], [0, y], [x, y]])   # 矩形单元的四角坐标
+    numN = (nx + 1) * (ny + 1)                          # 节点的数量
+    numE = nx * ny                                      # 单元的数量
+    NofE = 4                                            # 矩形element的角
+    D = 2                                               # 二维坐标
+    nodeCoor = np.zeros([numN, D])                      # nodes 坐标
+    dx = q[1, 0] / nx                                   # dx,dy的计算
     dy = q[2, 1] / ny
-    # nodes 坐标计算
-    n = 0
+
+    n = 0                                           # nodes 坐标计算
     for i in range(1, ny + 2):
         for j in range(1, nx + 2):
-            NC[n, 0] = q[0, 0] + (j - 1) * dx
-            NC[n, 1] = q[0, 1] + (i - 1) * dy
+            nodeCoor[n, 0] = q[0, 0] + (j - 1) * dx
+            nodeCoor[n, 1] = q[0, 1] + (i - 1) * dy
 
             n += 1
-    # element 索引，一个element由四个角的节点进行索引
-    EI = np.zeros([numE, NofE])
+    
+    elementIndex = np.zeros([numE, NofE])                     # element 索引，一个element由四个角的节点进行索引
 
-    for i in range(1, ny + 1):
+    for i in range(1, ny + 1):                      # 矩形单元的划分工作
         for j in range(1, nx + 1):
             # 从底层开始类推
             if j == 1:
-                EI[(i - 1) * nx + j - 1, 0] = (i - 1) * (nx + 1) + 1
-                EI[(i - 1) * nx + j - 1, 1] = EI[(i - 1) * nx + j - 1, 0] + 1
-                EI[(i - 1) * nx + j - 1, 3] = EI[(i - 1) * nx + j - 1, 0] + (nx + 1)
-                EI[(i - 1) * nx + j - 1, 2] = EI[(i - 1) * nx + j - 1, 3] + 1
+                elementIndex[(i - 1) * nx + j - 1, 0] = (i - 1) * (nx + 1) + 1
+                elementIndex[(i - 1) * nx + j - 1, 1] = elementIndex[(i - 1) * nx + j - 1, 0] + 1
+                elementIndex[(i - 1) * nx + j - 1, 3] = elementIndex[(i - 1) * nx + j - 1, 0] + (nx + 1)
+                elementIndex[(i - 1) * nx + j - 1, 2] = elementIndex[(i - 1) * nx + j - 1, 3] + 1
             else:
-                EI[(i - 1) * nx + j - 1, 0] = EI[(i - 1) * nx + j - 2, 1]
-                EI[(i - 1) * nx + j - 1, 3] = EI[(i - 1) * nx + j - 2, 2]
-                EI[(i - 1) * nx + j - 1, 1] = EI[(i - 1) * nx + j - 1, 0] + 1
-                EI[(i - 1) * nx + j - 1, 2] = EI[(i - 1) * nx + j - 1, 3] + 1
-    # 至此完成了矩形单元的划分工作
+                elementIndex[(i - 1) * nx + j - 1, 0] = elementIndex[(i - 1) * nx + j - 2, 1]
+                elementIndex[(i - 1) * nx + j - 1, 3] = elementIndex[(i - 1) * nx + j - 2, 2]
+                elementIndex[(i - 1) * nx + j - 1, 1] = elementIndex[(i - 1) * nx + j - 1, 0] + 1
+                elementIndex[(i - 1) * nx + j - 1, 2] = elementIndex[(i - 1) * nx + j - 1, 3] + 1
 
     # 三角形单元需要将每一个矩形单元进行拆分，即一分二成两个三角形
     if e_type == 'TR':
-        # 三角形的三个角
-        NofE_new = 3
-        # 单元数量
-        numE_new = numE * 2
-        # 新的三角单元索引
-        EI_new = np.zeros([numE_new, NofE_new])
+        NofE_new = 3            # 三角形的三个角
+        numE_new = numE * 2     # 单元数量
+        
+        EI_new = np.zeros([numE_new, NofE_new])     # 新的三角单元索引
 
         # 对矩形单元进行逐个剖分
         for i in range(1, numE + 1):
-            EI_new[2 * (i - 1), 0] = EI[i - 1, 0]
-            EI_new[2 * (i - 1), 1] = EI[i - 1, 1]
-            EI_new[2 * (i - 1), 2] = EI[i - 1, 2]
+            EI_new[2 * (i - 1), 0] = elementIndex[i - 1, 0]
+            EI_new[2 * (i - 1), 1] = elementIndex[i - 1, 1]
+            EI_new[2 * (i - 1), 2] = elementIndex[i - 1, 2]
 
-            EI_new[2 * (i - 1) + 1, 0] = EI[i - 1, 0]
-            EI_new[2 * (i - 1) + 1, 1] = EI[i - 1, 2]
-            EI_new[2 * (i - 1) + 1, 2] = EI[i - 1, 3]
+            EI_new[2 * (i - 1) + 1, 0] = elementIndex[i - 1, 0]
+            EI_new[2 * (i - 1) + 1, 1] = elementIndex[i - 1, 2]
+            EI_new[2 * (i - 1) + 1, 2] = elementIndex[i - 1, 3]
 
-        EI = EI_new
-    EI = EI.astype(int)
-    return NC, EI
+        elementIndex = EI_new
+
+    elementIndex = elementIndex.astype(int)
+    
+    return nodeCoor, elementIndex
+
 
 def strain_compute(node_coor, node_displace):
     # 三个节点坐标
@@ -139,28 +134,32 @@ def strain_compute(node_coor, node_displace):
     # print(f"Ex = {strain_conp[0]}\nEy = {strain_conp[1]}\nRxy = {strain_conp[2]}")
     return strain_conp
 
+
 def draw_mesh(flag, title, color_value_x=None):
+    """
+    绘制网格线、单元编号、节点编号
+    """
     if flag == "init_mesh":
         plt.figure(title)
         count = 1
         # plot nodes num
         for i in range(numN):
-            plt.annotate(count, xy=(NC[i, 0], NC[i, 1]))
+            plt.annotate(count, xy=(nodesCoor[i, 0], nodesCoor[i, 1]))      # 绘制节点编号
             count += 1
 
         if element_type == 'SQ':
             count2 = 1
             for i in range(numE):
-                # 计算中点位置
-                plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0]) / 2,
-                                        (NC[EI[i, 0] - 1, 1] + NC[EI[i, 3] - 1, 1]) / 2),
+                # 计算中点位置，绘制单元编号
+                plt.annotate(count2, xy=((nodesCoor[elementsIndex[i, 0] - 1, 0] + nodesCoor[elementsIndex[i, 1] - 1, 0]) / 2,
+                                        (nodesCoor[elementsIndex[i, 0] - 1, 1] + nodesCoor[elementsIndex[i, 3] - 1, 1]) / 2),
                             c='blue')
                 count2 += 1
-                # plot lines
-                x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
-                x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
-                x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-                x3, y3 = NC[EI[i, 3] - 1, 0], NC[EI[i, 3] - 1, 1]
+                # 绘制节点连线
+                x0, y0 = nodesCoor[elementsIndex[i, 0] - 1, 0], nodesCoor[elementsIndex[i, 0] - 1, 1]
+                x1, y1 = nodesCoor[elementsIndex[i, 1] - 1, 0], nodesCoor[elementsIndex[i, 1] - 1, 1]
+                x2, y2 = nodesCoor[elementsIndex[i, 2] - 1, 0], nodesCoor[elementsIndex[i, 2] - 1, 1]
+                x3, y3 = nodesCoor[elementsIndex[i, 3] - 1, 0], nodesCoor[elementsIndex[i, 3] - 1, 1]
                 plt.plot([x0, x1], [y0, y1], c='red', linewidth=2)
                 plt.plot([x0, x3], [y0, y3], c='red', linewidth=2)
                 plt.plot([x1, x2], [y1, y2], c='red', linewidth=2)
@@ -169,15 +168,17 @@ def draw_mesh(flag, title, color_value_x=None):
         if element_type == 'TR':
             count2 = 1
             for i in range(numE):
-                # 计算中点位置
-                plt.annotate(count2, xy=((NC[EI[i, 0] - 1, 0] + NC[EI[i, 1] - 1, 0] + NC[EI[i, 2] - 1, 0]) / 3,
-                                        (NC[EI[i, 0] - 1, 1] + NC[EI[i, 1] - 1, 1] + NC[EI[i, 2] - 1, 1]) / 3),
-                            c='blue')
+                # 计算中点位置，绘制单元编号
+                xy=((nodesCoor[elementsIndex[i, 0] - 1, 0] + nodesCoor[elementsIndex[i, 1] - 1, 0] + nodesCoor[elementsIndex[i, 2] - 1, 0]) / 3,
+                    (nodesCoor[elementsIndex[i, 0] - 1, 1] + nodesCoor[elementsIndex[i, 1] - 1, 1] + nodesCoor[elementsIndex[i, 2] - 1, 1]) / 3)
+                plt.annotate(count2, xy=xy, c='blue')
                 count2 += 1
-                x0, y0 = NC[EI[i, 0] - 1, 0], NC[EI[i, 0] - 1, 1]
-                x1, y1 = NC[EI[i, 1] - 1, 0], NC[EI[i, 1] - 1, 1]
-                x2, y2 = NC[EI[i, 2] - 1, 0], NC[EI[i, 2] - 1, 1]
-                plt.plot([x0, x1], [y0, y1], c='red', linewidth=2)
+
+                # 绘制节点连线
+                x0, y0 = nodesCoor[elementsIndex[i, 0] - 1, 0], nodesCoor[elementsIndex[i, 0] - 1, 1]
+                x1, y1 = nodesCoor[elementsIndex[i, 1] - 1, 0], nodesCoor[elementsIndex[i, 1] - 1, 1]
+                x2, y2 = nodesCoor[elementsIndex[i, 2] - 1, 0], nodesCoor[elementsIndex[i, 2] - 1, 1]
+                plt.plot([x0, x1], [y0, y1], c='red', linewidth=2)      
                 plt.plot([x1, x2], [y1, y2], c='red', linewidth=2)
                 plt.plot([x0, x2], [y0, y2], c='red', linewidth=2)
         # plt.xlim(0, x)
@@ -188,9 +189,9 @@ def draw_mesh(flag, title, color_value_x=None):
     elif flag == "strain_mesh":
         fig = plt.figure(title)
         sub = fig.add_subplot(111)
-        x = np.squeeze(NC[:, 0])
-        y = np.squeeze(NC[:, 1])
-        tri = EI - 1
+        x = np.squeeze(nodesCoor[:, 0])
+        y = np.squeeze(nodesCoor[:, 1])
+        tri = elementsIndex - 1
         triang = mtri.Triangulation(x, y, tri)
 
         # 给每一个三角形添加颜色
@@ -262,29 +263,29 @@ if __name__ == "__main__":
     nx = 10
     ny = 10
     element_type = 'TR'
-    NC, EI = creat_mesh(x, y, nx, ny, element_type)
-    numN = np.size(NC, 0)
-    numE = np.size(EI, 0)
+    nodesCoor, elementsIndex = creat_mesh(x, y, nx, ny, element_type)
+    numN = np.size(nodesCoor, 0)
+    numE = np.size(elementsIndex, 0)
 
     # 可视化网格
     draw_mesh("init_mesh", "mesh generate")
 
     node_disp_all = node_displacement(numN)
 
-    print("节点坐标：\n", NC)
-    print("单元索引：\n", EI)
+    print("节点坐标：\n", nodesCoor)
+    print("单元索引：\n", elementsIndex)
     print("节点位移：\n", node_disp_all)
 
     node_coor_tri = np.zeros([3, 2])
     node_disp_tri = np.zeros([3, 2])
     strain_conp_all = np.zeros([numE, 3, 1])
     for e in range(numE):
-        node_1_index = EI[e][0]-1
-        node_2_index = EI[e][1]-1
-        node_3_index = EI[e][2]-1
+        node_1_index = elementsIndex[e][0]-1
+        node_2_index = elementsIndex[e][1]-1
+        node_3_index = elementsIndex[e][2]-1
         for k in range(3):
-            node_coor_tri[k] = NC[EI[e][k]-1]
-            node_disp_tri[k] = node_disp_all[EI[e][k]-1]
+            node_coor_tri[k] = nodesCoor[elementsIndex[e][k]-1]
+            node_disp_tri[k] = node_disp_all[elementsIndex[e][k]-1]
         
         strain_conp_all[e] = strain_compute(node_coor_tri, node_disp_tri)
     
