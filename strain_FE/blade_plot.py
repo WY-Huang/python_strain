@@ -162,6 +162,8 @@ def calGlobalElementStrain(node1, node2, node3, dis1, dis2, dis3):
     strainConGlobal[2] = strainConGlobal[0] + strainConGlobal[1]
     print("strainConGlobal:\n", strainConGlobal)
 
+    return strainConGlobal
+
 
 def test_CalNormal3D():
     """
@@ -214,4 +216,4 @@ if __name__ == "__main__":
 
     # test_CalNormal3D()            # 测试局部坐标系变换
 
-    calGlobalElementStrain(p1, p2, p3, d1, d2, d3)      # 计算单个单元的全局坐标系下的应变分量
+    StrainGlobal = calGlobalElementStrain(p1, p2, p3, d1, d2, d3)      # 计算单个单元的全局坐标系下的应变分量
