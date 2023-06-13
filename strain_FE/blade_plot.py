@@ -1,6 +1,157 @@
 import numpy as np
 import matplotlib.pyplot as plt
-# from mpl_toolkits import mplot3d
+import matplotlib.tri as mtri
+from matplotlib.patches import Polygon
+
+
+def creat_mesh_3D(x, y, nx, ny, e_type):
+    '''
+    生成节点坐标和单元索引
+    x:x方向上的距离
+    y:y方向上的距离
+    nx:x方向上的element的数量
+    ny:y方向上的element的数量
+    e_type:SQ表示是矩形单元,TR表示三角单元
+
+    '''
+    q = np.array([[0., 0.], [x, 0.], [0, y], [x, y]])   # 矩形单元的四角坐标
+    numN = (nx + 1) * (ny + 1)                          # 节点的数量
+    numE = nx * ny                                      # 单元的数量
+    NofE = 4                                            # 矩形element的角
+    D = 3                                               # 三维坐标
+    nodeCoor = np.zeros([numN, D])                      # nodes 坐标
+    dx = q[1, 0] / nx                                   # dx,dy的计算
+    dy = q[2, 1] / ny
+
+    n = 0                                           # nodes 坐标计算
+    for i in range(1, ny + 2):
+        for j in range(1, nx + 2):
+            nodeCoor[n, 0] = q[0, 0] + (j - 1) * dx
+            nodeCoor[n, 1] = q[0, 1] + (i - 1) * dy
+            nodeCoor[n, 2] = 1 / (1 + np.exp(-nodeCoor[n, 0] - nodeCoor[n, 1]))
+            n += 1
+    
+    elementIndex = np.zeros([numE, NofE])                     # element 索引，一个element由四个角的节点进行索引
+
+    for i in range(1, ny + 1):                      # 矩形单元的划分工作
+        for j in range(1, nx + 1):
+            # 从底层开始类推
+            if j == 1:
+                elementIndex[(i - 1) * nx + j - 1, 0] = (i - 1) * (nx + 1) + 1
+                elementIndex[(i - 1) * nx + j - 1, 1] = elementIndex[(i - 1) * nx + j - 1, 0] + 1
+                elementIndex[(i - 1) * nx + j - 1, 3] = elementIndex[(i - 1) * nx + j - 1, 0] + (nx + 1)
+                elementIndex[(i - 1) * nx + j - 1, 2] = elementIndex[(i - 1) * nx + j - 1, 3] + 1
+            else:
+                elementIndex[(i - 1) * nx + j - 1, 0] = elementIndex[(i - 1) * nx + j - 2, 1]
+                elementIndex[(i - 1) * nx + j - 1, 3] = elementIndex[(i - 1) * nx + j - 2, 2]
+                elementIndex[(i - 1) * nx + j - 1, 1] = elementIndex[(i - 1) * nx + j - 1, 0] + 1
+                elementIndex[(i - 1) * nx + j - 1, 2] = elementIndex[(i - 1) * nx + j - 1, 3] + 1
+
+    # 三角形单元需要将每一个矩形单元进行拆分，即一分二成两个三角形
+    if e_type == 'TR':
+        NofE_new = 3            # 三角形的三个角
+        numE_new = numE * 2     # 单元数量
+        
+        EI_new = np.zeros([numE_new, NofE_new])     # 新的三角单元索引
+
+        # 对矩形单元进行逐个剖分
+        for i in range(1, numE + 1):
+            EI_new[2 * (i - 1), 0] = elementIndex[i - 1, 0]
+            EI_new[2 * (i - 1), 1] = elementIndex[i - 1, 1]
+            EI_new[2 * (i - 1), 2] = elementIndex[i - 1, 2]
+
+            EI_new[2 * (i - 1) + 1, 0] = elementIndex[i - 1, 0]
+            EI_new[2 * (i - 1) + 1, 1] = elementIndex[i - 1, 2]
+            EI_new[2 * (i - 1) + 1, 2] = elementIndex[i - 1, 3]
+
+        elementIndex = EI_new
+
+    elementIndex = elementIndex.astype(int)
+    
+    return nodeCoor, elementIndex
+
+
+def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, flag, title, color_value_x=None):
+    """
+    绘制网格线、单元编号、节点编号
+    """
+    if flag == "init_mesh":
+        fig = plt.figure(figsize=(10, 8))
+        ax3d = fig.add_subplot(projection="3d")
+
+        count = 1
+        # plot nodes num
+        for i in range(numNode):
+            ax3d.text(nodesCoor[i, 0], nodesCoor[i, 1], nodesCoor[i, 2], count, ha='center', va='center', color="g")
+            # ax3d.annotate(count, xy=(nodesCoor[i, 0], nodesCoor[i, 1]))      # 绘制节点编号
+            count += 1
+
+        if element_type == 'SQ':
+            count2 = 1
+            for i in range(numElement):
+                # 计算中点位置，绘制单元编号
+                plt.annotate(count2, xy=((nodesCoor[elementsIndex[i, 0] - 1, 0] + nodesCoor[elementsIndex[i, 1] - 1, 0]) / 2,
+                                        (nodesCoor[elementsIndex[i, 0] - 1, 1] + nodesCoor[elementsIndex[i, 3] - 1, 1]) / 2),
+                            c='blue')
+                count2 += 1
+                # 绘制节点连线
+                x0, y0 = nodesCoor[elementsIndex[i, 0] - 1, 0], nodesCoor[elementsIndex[i, 0] - 1, 1]
+                x1, y1 = nodesCoor[elementsIndex[i, 1] - 1, 0], nodesCoor[elementsIndex[i, 1] - 1, 1]
+                x2, y2 = nodesCoor[elementsIndex[i, 2] - 1, 0], nodesCoor[elementsIndex[i, 2] - 1, 1]
+                x3, y3 = nodesCoor[elementsIndex[i, 3] - 1, 0], nodesCoor[elementsIndex[i, 3] - 1, 1]
+                plt.plot([x0, x1], [y0, y1], c='red', linewidth=2)
+                plt.plot([x0, x3], [y0, y3], c='red', linewidth=2)
+                plt.plot([x1, x2], [y1, y2], c='red', linewidth=2)
+                plt.plot([x2, x3], [y2, y3], c='red', linewidth=2)
+
+        if element_type == 'TR':
+            count2 = 1
+            for i in range(numElement):
+                # 计算中点位置，绘制单元编号
+                x, y, z = ((nodesCoor[elementsIndex[i, 0] - 1, 0] + nodesCoor[elementsIndex[i, 1] - 1, 0] + nodesCoor[elementsIndex[i, 2] - 1, 0]) / 3,
+                          (nodesCoor[elementsIndex[i, 0] - 1, 1] + nodesCoor[elementsIndex[i, 1] - 1, 1] + nodesCoor[elementsIndex[i, 2] - 1, 1]) / 3,
+                          (nodesCoor[elementsIndex[i, 0] - 1, 2] + nodesCoor[elementsIndex[i, 1] - 1, 2] + nodesCoor[elementsIndex[i, 2] - 1, 2]) / 3)
+                # plt.annotate(count2, xy=xy, c='blue')
+                ax3d.text(x, y, z, count2, ha='center', va='center', color="b")
+                count2 += 1
+
+                # 绘制节点连线
+                x0, y0, z0 = nodesCoor[elementsIndex[i, 0] - 1, 0], nodesCoor[elementsIndex[i, 0] - 1, 1], nodesCoor[elementsIndex[i, 0] - 1, 2]
+                x1, y1, z1 = nodesCoor[elementsIndex[i, 1] - 1, 0], nodesCoor[elementsIndex[i, 1] - 1, 1], nodesCoor[elementsIndex[i, 1] - 1, 2]
+                x2, y2, z2 = nodesCoor[elementsIndex[i, 2] - 1, 0], nodesCoor[elementsIndex[i, 2] - 1, 1], nodesCoor[elementsIndex[i, 2] - 1, 2]
+                plt.plot([x0, x1], [y0, y1], [z0, z1], c='red', linewidth=2)      
+                plt.plot([x1, x2], [y1, y2], [z1, z2], c='red', linewidth=2)
+                plt.plot([x0, x2], [y0, y2], [z0, z2], c='red', linewidth=2)
+        # plt.xlim(0, x)
+        # plt.ylim(0, y)
+        # plt.axis('equal')
+        # plt.axis("tight")   # equal
+
+    elif flag == "strain_mesh":
+        fig = plt.figure(title)
+        sub = fig.add_subplot(111)
+        x = np.squeeze(nodesCoor[:, 0])
+        y = np.squeeze(nodesCoor[:, 1])
+        tri = elementsIndex - 1
+        triang = mtri.Triangulation(x, y, tri)
+
+        # 给每一个三角形添加颜色
+        triangles = tri
+        for i in range(numElement):
+            vertices = np.zeros([3,2])
+            for j in range(3):
+                vertices[j,0] = x[triangles[i,j]]
+                vertices[j,1] = y[triangles[i,j]]
+            # x_center = (x[triangles[i,0]]+x[triangles[i,1]]+x[triangles[i,2]])/3
+            poly = Polygon(vertices, color=plt.cm.autumn(color_value_x[i]))
+            sub.add_patch(poly)
+
+        sub.set_aspect('equal')
+        # plt.tricontourf(triang, np.zeros_like(x))
+        plt.triplot(triang) # , 'go-'
+        # cbar = fig.colorbar(sub)
+
+    plt.show()
 
 
 def draw_tri_grid():
@@ -203,7 +354,7 @@ def test_CalNormal3D():
 
 
 if __name__ == "__main__":
-
+    """
     p1 = np.array([1, 0, 0])        # 节点坐标
     p2 = np.array([0, 1, 0])
     p3 = np.array([0, 0, 1])
@@ -212,8 +363,20 @@ if __name__ == "__main__":
     d2 = np.random.randn(3) / 20
     d3 = np.random.randn(3) / 20
     
-    # draw_tri_grid()               # 绘制三角网格图
+    draw_tri_grid()               # 绘制三角网格图
 
     # test_CalNormal3D()            # 测试局部坐标系变换
 
     StrainGlobal = calGlobalElementStrain(p1, p2, p3, d1, d2, d3)      # 计算单个单元的全局坐标系下的应变分量
+    """
+
+    # 网格参数
+    x, y = 2, 5
+    nx = 10
+    ny = 10
+    element_type = 'TR'
+    nodesCoor, elementsIndex = creat_mesh_3D(x, y, nx, ny, element_type)
+    numN = np.size(nodesCoor, 0)
+    numE = np.size(elementsIndex, 0)
+
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "init_mesh", "3D mesh generate")
