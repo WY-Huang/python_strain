@@ -19,6 +19,7 @@ def CalNormal3D(point_1, point_2, point_3):
 
     normal_x = point_2 - point_1
     normal_y = np.cross(normal_z, normal_x) # 叉乘ab，得到垂直于ab的c向量
+    print("nx, ny, nz:\n", normal_x, normal_y, normal_z)
 
     return normal_x, normal_y, normal_z
 
@@ -104,10 +105,9 @@ def test_CalNormal3D():
     d3 = np.random.randn(3) / 20
 
     nx, ny, nz = CalNormal3D(p1, p2, p3)    # 计算局部坐标系三个轴向量
-    print("nx, ny, nz:\n", nx, ny, nz)
+    rotate_arr = calCosine(nx, ny, nz)      
 
-    rotate_arr = calCosine(nx, ny, nz)      # 局部坐标系下新坐标
-    p1New = np.matmul(rotate_arr, p1)
+    p1New = np.matmul(rotate_arr, p1)       # 局部坐标系下新坐标
     p2New = np.matmul(rotate_arr, p2)
     p3New = np.matmul(rotate_arr, p3)
     print("p1New, p2New, p3New:\n", p1New, p2New, p3New)
