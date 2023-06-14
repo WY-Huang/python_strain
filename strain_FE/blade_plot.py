@@ -1,7 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.tri as mtri
-from matplotlib.patches import Polygon
+from mpl_toolkits.mplot3d.art3d import Poly3DCollection
 
 
 def creat_mesh_3D(x, y, nx, ny, e_type):
@@ -83,7 +82,6 @@ def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, fl
         # plot nodes num
         for i in range(numNode):
             ax3d.text(nodesCoor[i, 0], nodesCoor[i, 1], nodesCoor[i, 2], count, ha='center', va='center', color="g")
-            # ax3d.annotate(count, xy=(nodesCoor[i, 0], nodesCoor[i, 1]))      # 绘制节点编号
             count += 1
 
         if element_type == 'SQ':
@@ -108,11 +106,10 @@ def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, fl
             count2 = 1
             for i in range(numElement):
                 # 计算中点位置，绘制单元编号
-                x, y, z = ((nodesCoor[elementsIndex[i, 0] - 1, 0] + nodesCoor[elementsIndex[i, 1] - 1, 0] + nodesCoor[elementsIndex[i, 2] - 1, 0]) / 3,
+                x_coor, y_coor, z = ((nodesCoor[elementsIndex[i, 0] - 1, 0] + nodesCoor[elementsIndex[i, 1] - 1, 0] + nodesCoor[elementsIndex[i, 2] - 1, 0]) / 3,
                           (nodesCoor[elementsIndex[i, 0] - 1, 1] + nodesCoor[elementsIndex[i, 1] - 1, 1] + nodesCoor[elementsIndex[i, 2] - 1, 1]) / 3,
                           (nodesCoor[elementsIndex[i, 0] - 1, 2] + nodesCoor[elementsIndex[i, 1] - 1, 2] + nodesCoor[elementsIndex[i, 2] - 1, 2]) / 3)
-                # plt.annotate(count2, xy=xy, c='blue')
-                ax3d.text(x, y, z, count2, ha='center', va='center', color="b")
+                ax3d.text(x_coor, y_coor, z, count2, ha='center', va='center', color="b")
                 count2 += 1
 
                 # 绘制节点连线
@@ -122,34 +119,20 @@ def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, fl
                 plt.plot([x0, x1], [y0, y1], [z0, z1], c='red', linewidth=2)      
                 plt.plot([x1, x2], [y1, y2], [z1, z2], c='red', linewidth=2)
                 plt.plot([x0, x2], [y0, y2], [z0, z2], c='red', linewidth=2)
-        # plt.xlim(0, x)
-        # plt.ylim(0, y)
-        # plt.axis('equal')
-        # plt.axis("tight")   # equal
 
     elif flag == "strain_mesh":
-        fig = plt.figure(title)
-        sub = fig.add_subplot(111)
-        x = np.squeeze(nodesCoor[:, 0])
-        y = np.squeeze(nodesCoor[:, 1])
-        tri = elementsIndex - 1
-        triang = mtri.Triangulation(x, y, tri)
+        fig = plt.figure(title, figsize=(10, 8))
+        ax3d = fig.add_subplot(projection="3d")
 
+        tri = elementsIndex - 1     # 从0开始的单元索引（200, 3）
+        vertices = nodesCoor[tri]
+        # print(vertices)
         # 给每一个三角形添加颜色
-        triangles = tri
-        for i in range(numElement):
-            vertices = np.zeros([3,2])
-            for j in range(3):
-                vertices[j,0] = x[triangles[i,j]]
-                vertices[j,1] = y[triangles[i,j]]
-            # x_center = (x[triangles[i,0]]+x[triangles[i,1]]+x[triangles[i,2]])/3
-            poly = Polygon(vertices, color=plt.cm.autumn(color_value_x[i]))
-            sub.add_patch(poly)
-
-        sub.set_aspect('equal')
-        # plt.tricontourf(triang, np.zeros_like(x))
-        plt.triplot(triang) # , 'go-'
-        # cbar = fig.colorbar(sub)
+        poly3d = Poly3DCollection(vertices, facecolors=color_value_x)      # , edgecolors='black', plt.cm.autumn(color_value_x[i])
+        ax3d.add_collection3d(poly3d)
+        ax3d.set_xlim([0, 2])
+        ax3d.set_ylim([0, 4])
+        ax3d.set_zlim([0, 1])
 
     ax3d.set_xlabel('X')
     ax3d.set_ylabel('Y')
@@ -157,7 +140,21 @@ def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, fl
     ax3d.set_box_aspect([5, 10, 2])
 
     plt.tight_layout()
-    plt.show()
+    # plt.show()
+
+
+def normalization(color_value):
+    '''
+    将应变值归一化，用于绘制热力图
+    '''
+    color_rgba = np.zeros((len(color_value), 4))
+    x_max = color_value.max()
+    x_min = color_value.min()
+    for i, value in enumerate(color_value):
+        color_value[i] = value / (x_max - x_min)
+        color_rgba[i] = plt.cm.autumn(color_value_x[i])
+
+    return color_rgba
 
 
 def draw_tri_grid():
@@ -322,7 +319,7 @@ def calGlobalElementStrain(node1, node2, node3, dis1, dis2, dis3):
     return strainConGlobal
 
 
-def test_CalNormal3D():
+def test_CalNormal3D(p1, p2, p3):
     """
     测试CalNormal3D的返回向量
     """
@@ -371,12 +368,12 @@ if __name__ == "__main__":
     
     draw_tri_grid()               # 绘制三角网格图
 
-    # test_CalNormal3D()            # 测试局部坐标系变换
+    # test_CalNormal3D(p1, p2, p3)            # 测试局部坐标系变换
 
     StrainGlobal = calGlobalElementStrain(p1, p2, p3, d1, d2, d3)      # 计算单个单元的全局坐标系下的应变分量
     """
 
-    # 网格参数
+    # 3D网格参数设置
     x, y = 2, 4
     nx = 10
     ny = 10
@@ -385,4 +382,37 @@ if __name__ == "__main__":
     numN = np.size(nodesCoor, 0)
     numE = np.size(elementsIndex, 0)
 
-    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "init_mesh", "3D mesh generate")
+    # draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "3D mesh generate")
+
+    node_coor_tri = np.zeros([3, 3])
+    node_disp_tri = np.zeros([3, 3])
+    strain_conp_all = np.zeros([numE, 3, 1])
+    for e in range(numE):
+        node_1_index = elementsIndex[e][0]-1
+        node_2_index = elementsIndex[e][1]-1
+        node_3_index = elementsIndex[e][2]-1
+        for k in range(3):
+            node_coor_tri[k] = nodesCoor[elementsIndex[e][k]-1]
+            # node_disp_tri[k] = node_disp_all[elementsIndex[e][k]-1]
+        
+        d1 = np.random.randn(3) / 20    # 节点位移
+        d2 = np.random.randn(3) / 20
+        d3 = np.random.randn(3) / 20
+        strain_conp_all[e] = calGlobalElementStrain(node_coor_tri[0], node_coor_tri[1], node_coor_tri[2], d1, d2, d3)
+
+    
+    # 可视化应变分量
+    color_value_x = strain_conp_all[:, 0, 0]
+    color_x = normalization(color_value_x)
+
+    color_value_y = strain_conp_all[:, 1, 0]
+    color_y = normalization(color_value_y)
+
+    color_value_xy = strain_conp_all[:, 2, 0]
+    color_xy = normalization(color_value_xy)
+
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "color_value_x", color_x)
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "color_value_y", color_y)
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "color_value_xy", color_xy)
+
+    plt.show()
