@@ -411,8 +411,8 @@ if __name__ == "__main__":
     color_value_xy = strain_conp_all[:, 2, 0]
     color_xy = normalization(color_value_xy)
 
-    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "color_value_x", color_x)
-    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "color_value_y", color_y)
-    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "color_value_xy", color_xy)
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "strain_x", color_x)
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "strain_y", color_y)
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "strain_xy", color_xy)
 
     plt.show()
