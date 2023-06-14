@@ -400,7 +400,6 @@ if __name__ == "__main__":
         d3 = np.random.randn(3) / 20
         strain_conp_all[e] = calGlobalElementStrain(node_coor_tri[0], node_coor_tri[1], node_coor_tri[2], d1, d2, d3)
 
-    
     # 可视化应变分量
     color_value_x = strain_conp_all[:, 0, 0]
     color_x = normalization(color_value_x)
