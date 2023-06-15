@@ -139,12 +139,16 @@ def draw_mesh_3D(numNode, numElement, nodesCoor, elementsIndex, element_type, fl
         ax3d.set_ylim([0, 4])
         ax3d.set_zlim([0, 1])
 
+        scalar_map = plt.cm.ScalarMappable(cmap='jet')
+        fig.colorbar(scalar_map, shrink=0.8)
+
     ax3d.set_xlabel('X')
     ax3d.set_ylabel('Y')
     ax3d.set_zlabel('Z')
     ax3d.set_box_aspect([5, 10, 2])
 
     plt.tight_layout()
+    
     # plt.show()
 
 
@@ -159,7 +163,7 @@ def normalization(color_value):
         color_value[i] = value - x_min / (x_max - x_min)
         # color_rgba[i] = plt.cm.autumn(color_value[i])
     
-    color_rgba = plt.cm.autumn(color_value)
+    color_rgba = plt.cm.jet(color_value)
 
     return color_rgba
 
@@ -401,8 +405,8 @@ if __name__ == "__main__":
             # node_disp_tri[k] = node_disp_all[elementsIndex[e][k]-1]
         
         d1 = np.random.randn(3) / 20    # 节点位移
-        d2 = np.random.randn(3) / 20
-        d3 = np.random.randn(3) / 20
+        d2 = d1 * 2
+        d3 = d1 * 2
         strain_conp_all[e] = calGlobalElementStrain(node_coor_tri[0], node_coor_tri[1], node_coor_tri[2], d1, d2, d3)
 
     # 可视化应变分量
