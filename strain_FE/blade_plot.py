@@ -1,3 +1,8 @@
+"""
+曲面结构的平面应变分量计算
+
+"""
+
 import numpy as np
 import matplotlib.pyplot as plt
 from mpl_toolkits.mplot3d.art3d import Poly3DCollection
@@ -147,12 +152,14 @@ def normalization(color_value):
     '''
     将应变值归一化，用于绘制热力图
     '''
-    color_rgba = np.zeros((len(color_value), 4))
+    # color_rgba = np.zeros((len(color_value), 4))
     x_max = color_value.max()
     x_min = color_value.min()
     for i, value in enumerate(color_value):
-        color_value[i] = value / (x_max - x_min)
-        color_rgba[i] = plt.cm.autumn(color_value_x[i])
+        color_value[i] = value - x_min / (x_max - x_min)
+        # color_rgba[i] = plt.cm.autumn(color_value[i])
+    
+    color_rgba = plt.cm.autumn(color_value)
 
     return color_rgba
 
@@ -310,10 +317,8 @@ def calGlobalElementStrain(node1, node2, node3, dis1, dis2, dis3):
     print("strainCon:\n", strainCon)
 
     strainLocal = strainCon
-    strainLocal[2] = 0
-    R_inv = np.linalg.inv(rotate_arr)               # 局部到全局的变换矩阵R_inv
-    strainConGlobal = np.matmul(R_inv, strainLocal)
-    strainConGlobal[2] = strainConGlobal[0] + strainConGlobal[1]
+    R_inv = np.linalg.inv(rotate_arr)               # 局部到全局的变换矩阵R_inv, 逆矩阵
+    strainConGlobal = np.matmul(R_inv, strainLocal) # ???存在问题???
     print("strainConGlobal:\n", strainConGlobal)
 
     return strainConGlobal

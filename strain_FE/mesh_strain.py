@@ -1,3 +1,9 @@
+"""
+平面结构的平面应变分量计算
+
+"""
+
+
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.tri as mtri
@@ -88,7 +94,7 @@ def creat_mesh(x, y, nx, ny, e_type):
         elementIndex = EI_new
 
     elementIndex = elementIndex.astype(int)
-    
+
     return nodeCoor, elementIndex
 
 
