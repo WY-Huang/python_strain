@@ -385,7 +385,7 @@ if __name__ == "__main__":
     # 3D网格参数设置
     x, y = 2, 4
     nx = 10
-    ny = 10
+    ny = 20
     element_type = 'TR'
     nodesCoor, elementsIndex = creat_mesh_3D(x, y, nx, ny, element_type)
     numN = np.size(nodesCoor, 0)
@@ -396,6 +396,7 @@ if __name__ == "__main__":
     node_coor_tri = np.zeros([3, 3])
     node_disp_tri = np.zeros([3, 3])
     strain_conp_all = np.zeros([numE, 3, 1])
+    displace_factor = 0
     for e in range(numE):
         node_1_index = elementsIndex[e][0]-1
         node_2_index = elementsIndex[e][1]-1
@@ -404,7 +405,9 @@ if __name__ == "__main__":
             node_coor_tri[k] = nodesCoor[elementsIndex[e][k]-1]
             # node_disp_tri[k] = node_disp_all[elementsIndex[e][k]-1]
         
-        d1 = np.random.randn(3) / 20    # 节点位移
+        # d1 = np.random.randn(3) / 20    # 节点位移
+        displace_factor += 0.0005
+        d1 = np.array([0.001 + displace_factor, 0.002 + displace_factor, 0.005 + displace_factor])
         d2 = d1 * 2
         d3 = d1 * 2
         strain_conp_all[e] = calGlobalElementStrain(node_coor_tri[0], node_coor_tri[1], node_coor_tri[2], d1, d2, d3)
