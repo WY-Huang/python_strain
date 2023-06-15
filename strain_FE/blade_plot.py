@@ -322,7 +322,7 @@ def calGlobalElementStrain(node1, node2, node3, dis1, dis2, dis3):
 
     strainLocal = strainCon
     R_inv = np.linalg.inv(rotate_arr)               # 局部到全局的变换矩阵R_inv, 逆矩阵
-    strainConGlobal = np.matmul(R_inv, strainLocal) # ???存在问题???
+    strainConGlobal = np.matmul(R_inv, strainLocal) # ???这一步可能存在问题???
     print("strainConGlobal:\n", strainConGlobal)
 
     return strainConGlobal
@@ -384,8 +384,8 @@ if __name__ == "__main__":
 
     # 3D网格参数设置
     x, y = 2, 4
-    nx = 10
-    ny = 20
+    nx = 20
+    ny = 40
     element_type = 'TR'
     nodesCoor, elementsIndex = creat_mesh_3D(x, y, nx, ny, element_type)
     numN = np.size(nodesCoor, 0)
