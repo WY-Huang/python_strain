@@ -384,14 +384,14 @@ if __name__ == "__main__":
 
     # 3D网格参数设置
     x, y = 2, 4
-    nx = 20
-    ny = 40
+    nx = 8
+    ny = 16
     element_type = 'TR'
     nodesCoor, elementsIndex = creat_mesh_3D(x, y, nx, ny, element_type)
     numN = np.size(nodesCoor, 0)
     numE = np.size(elementsIndex, 0)
 
-    # draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "strain_mesh", "3D mesh generate")
+    draw_mesh_3D(numN, numE, nodesCoor, elementsIndex, element_type, "init_mesh", "3D mesh generate")
 
     node_coor_tri = np.zeros([3, 3])
     node_disp_tri = np.zeros([3, 3])
@@ -406,7 +406,7 @@ if __name__ == "__main__":
             # node_disp_tri[k] = node_disp_all[elementsIndex[e][k]-1]
         
         # d1 = np.random.randn(3) / 20    # 节点位移
-        displace_factor += 0.0005
+        displace_factor += 0.001
         d1 = np.array([0.001 + displace_factor, 0.002 + displace_factor, 0.005 + displace_factor])
         d2 = d1 * 2
         d3 = d1 * 2
