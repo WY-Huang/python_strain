@@ -375,9 +375,9 @@ if __name__ == "__main__":
     d2 = np.random.randn(3) / 20
     d3 = np.random.randn(3) / 20
     
-    draw_tri_grid()               # 绘制三角网格图
+    draw_tri_grid()                 # 绘制三角网格图
 
-    # test_CalNormal3D(p1, p2, p3)            # 测试局部坐标系变换
+    # test_CalNormal3D(p1, p2, p3)  # 测试局部坐标系变换
 
     StrainGlobal = calGlobalElementStrain(p1, p2, p3, d1, d2, d3)      # 计算单个单元的全局坐标系下的应变分量
     """
